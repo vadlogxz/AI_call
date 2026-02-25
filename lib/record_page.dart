@@ -1,18 +1,28 @@
+import 'package:elia/feature/dashboard/di/flutter_sound_recorder_provider.dart';
+import 'package:elia/feature/dashboard/presentation/state/recording_state_notifier.dart';
 import 'package:flutter/material.dart';
-import 'package:record/record.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import 'package:elia/feature/dashboard/presentation/state/recording_notifier.dart';
-import 'package:elia/feature/dashboard/presentation/state/recording_state.dart';
+import 'feature/dashboard/presentation/state/recording_state.dart';
+
 
 class Recorder extends ConsumerWidget {
   const Recorder({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(recordingNotifierProvider);
-    final notifier = ref.read(recordingNotifierProvider.notifier);
+    final recorder = ref.read(flutterSoundRecorderProvider);
+    final state = ref.watch(recordingNotifierProvider(recorder)).value;
+    final notifier = ref.read(recordingNotifierProvider(recorder).notifier);
+
+    if (state == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -24,40 +34,20 @@ class Recorder extends ConsumerWidget {
               const SizedBox(width: 20),
               _buildPauseResumeControl(context, state, notifier),
               const SizedBox(width: 20),
-              _buildText(state),
             ],
           ),
-          if (state.amplitude != null) ...[
-            const SizedBox(height: 40),
-            Text('Current: ${state.amplitude?.current ?? 0.0}'),
-            Text('Max: ${state.amplitude?.max ?? 0.0}'),
-          ],
-          const SizedBox(height: 12),
-          Text('Bytes: ${state.bytesSent}'),
-          const SizedBox(height: 12),
+          SizedBox(height: 20,),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: ShadProgress(
-              value: _calculateProgress(
-                state.amplitude ?? Amplitude(current: -160, max: -160),
-              ),
+              value: state.decibel / 120,
             ),
           ),
-          const SizedBox(height: 20),
-          ShadSlider(
-            initialValue: state.volume,
-            onChanged: notifier.setVolume,
-          ),
+          SizedBox(height: 20,),
+          _buildTimer(state.duration.inSeconds),
         ],
       ),
     );
-  }
-
-  double _calculateProgress(Amplitude amp) {
-    const double minDb = -160;
-    const double maxDb = 0;
-    final double v = ((amp.current - minDb) / (maxDb - minDb)).clamp(0.0, 1.0);
-    return v;
   }
 
   Widget _buildRecordStopControl(
@@ -68,7 +58,7 @@ class Recorder extends ConsumerWidget {
     late Icon icon;
     late Color color;
 
-    if (state.recordState != RecordState.stop) {
+    if (state.recorderState != RecorderState.stopped) {
       icon = const Icon(Icons.stop, color: Colors.red, size: 30);
       color = Colors.red.withValues(alpha: 0.1);
     } else {
@@ -83,7 +73,7 @@ class Recorder extends ConsumerWidget {
         child: ShadIconButton(
           icon: icon,
           onPressed: () {
-            (state.recordState != RecordState.stop)
+            (state.recorderState != RecorderState.stopped)
                 ? notifier.stop()
                 : notifier.start();
           },
@@ -97,14 +87,14 @@ class Recorder extends ConsumerWidget {
     RecordingState state,
     RecordingNotifier notifier,
   ) {
-    if (state.recordState == RecordState.stop) {
+    if (state.recorderState == RecorderState.stopped) {
       return const SizedBox.shrink();
     }
 
     late Icon icon;
     late Color color;
 
-    if (state.recordState == RecordState.record) {
+    if (state.recorderState == RecorderState.recording) {
       icon = const Icon(Icons.pause, color: Colors.red, size: 30);
       color = Colors.red.withValues(alpha: 0.1);
     } else {
@@ -119,21 +109,13 @@ class Recorder extends ConsumerWidget {
         child: ShadIconButton(
           icon: icon,
           onPressed: () {
-            (state.recordState == RecordState.pause)
+            (state.recorderState == RecorderState.paused)
                 ? notifier.resume()
                 : notifier.pause();
           },
         ),
       ),
     );
-  }
-
-  Widget _buildText(RecordingState state) {
-    if (state.recordState != RecordState.stop) {
-      return _buildTimer(state.recordDuration);
-    }
-
-    return const Text("Waiting to record");
   }
 
   Widget _buildTimer(int recordDuration) {

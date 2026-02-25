@@ -21,7 +21,6 @@ class MyApp extends StatelessWidget {
       appBuilder: (context) {
         return MaterialApp(
           theme: Theme.of(context),
-          // home: const HomePage(),
           home: Recorder(),
           builder: (context, child) {
             return ShadAppBuilder(child: child!);
