@@ -5,11 +5,12 @@ import 'package:record/record.dart';
 
 class StartRecording {
   StartRecording({required AudioRecorder audioRecorder})
-      : _audioRecorder = audioRecorder;
+    : _audioRecorder = audioRecorder;
 
   final AudioRecorder _audioRecorder;
 
   Future<Stream<Uint8List>?> call(AudioEncoder encoder) async {
+  
     try {
       if (!await _hasMicrophonePermission()) {
         return null;
@@ -20,9 +21,11 @@ class StartRecording {
       }
 
       final config = _buildConfig(encoder);
-      return _audioRecorder.startStream(config);
+      final s = _audioRecorder.startStream(config);
+      debugPrint('AudioRecorder.startStream called, got stream=$s');
+      return s;
     } catch (e) {
-      debugPrint('Error starting recording: $e'); 
+      debugPrint('Error starting recording: $e');
       return null;
     }
   }
@@ -51,17 +54,16 @@ class StartRecording {
     return isSupported;
   }
 
-
   RecordConfig _buildConfig(AudioEncoder encoder) {
     return RecordConfig(
       encoder: encoder,
       numChannels: 1,
       sampleRate: 16000,
-      autoGain: true,
-      noiseSuppress: true,
-      echoCancel: true,
+      autoGain: false,
+      noiseSuppress: false,
+      echoCancel: false,
       androidConfig: const AndroidRecordConfig(
-        audioSource: AndroidAudioSource.voiceCommunication,
+        audioSource: AndroidAudioSource.voiceRecognition,
       ),
     );
   }

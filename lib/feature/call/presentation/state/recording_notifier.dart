@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:record/record.dart';
+import 'package:vad/vad.dart';
 
 import '../../di/recorder_providers.dart';
 import '../../domain/usecases/start_recording.dart';
@@ -16,12 +16,12 @@ final recordingNotifierProvider =
 
 class RecordingNotifier extends Notifier<RecordingState> {
   static const int _playChunkSize = 512;
-  static const double _gain = 1.0;
 
   late final AudioRecorder _audioRecorder;
   late final StartRecording _startRecording;
   late final StopRecording _stopRecording;
   late final FlutterSoundPlayer _player;
+  late final VadHandler _vadHandler;
 
   bool _playerReady = false;
   bool _initialized = false;
@@ -35,7 +35,9 @@ class RecordingNotifier extends Notifier<RecordingState> {
     _audioRecorder = ref.watch(audioRecorderProvider);
     _startRecording = ref.watch(startRecordingProvider);
     _stopRecording = ref.watch(stopRecordingProvider);
+    _vadHandler = ref.watch(vadHandlerProvider);
 
+    state = const RecordingState();
     if (!_initialized) {
       _player = FlutterSoundPlayer();
       _recordSub = _audioRecorder.onStateChanged().listen(_handleRecordState);
@@ -48,30 +50,23 @@ class RecordingNotifier extends Notifier<RecordingState> {
               debugPrint(
                 'Amplitude is not finite: current=${amp.current}, max=${amp.max}',
               );
-              // Auto-restart recording if amplitude is not finite
-              _restartRecordingOnAmplitudeError();
             }
           });
       ref.onDispose(_disposeResources);
       _initialized = true;
-      return const RecordingState();
     }
     return state;
   }
 
-  void _restartRecordingOnAmplitudeError() async {
-    debugPrint('Restarting recording due to amplitude error...');
-    await stop();
-    await Future.delayed(const Duration(milliseconds: 500));
-    await start();
-  }
-
   Future<void> start() async {
+    debugPrint('before start: recordState=${state.recordState}');
     try {
       if (!_playerReady) {
         await _player.openPlayer();
         _playerReady = true;
       }
+
+      debugPrint('Player opened: isOpen=${_player.isOpen()}');
 
       const encoder = AudioEncoder.pcm16bits;
       _player.setVolume(state.volume);
@@ -83,19 +78,32 @@ class RecordingNotifier extends Notifier<RecordingState> {
         bufferSize: _playChunkSize,
       );
 
+      debugPrint('Player started with PCM 16-bit, 1 channel, 16kHz');
       final stream = await _startRecording(encoder);
+      debugPrint('startRecording returned null? ${stream == null}');
       if (stream == null) {
         await _player.stopPlayer();
         return;
       }
 
+      debugPrint('Recording started with encoder: ${encoder.name}');
+
       await _audioStreamSub?.cancel();
-      state = state.copyWith(bytesSent: 0, recordDuration: 0);
+      state = state.copyWith(bytesSent: 0, recordDuration: Duration.zero);
+
+      await _vadHandler.startListening(audioStream: stream);
+
       _audioStreamSub = stream.listen(
         (data) {
+          debugPrint('Received audio chunk: ${data.length} bytes');
+          debugPrint(
+            'Current state before update: bytesSent=${state.bytesSent}, recordDuration=${state.recordDuration}',
+          );
+          debugPrint(
+            'Amplitude: ${state.amplitude?.current.toStringAsFixed(2)} / ${state.amplitude?.max.toStringAsFixed(2)}',
+          );
           state = state.copyWith(bytesSent: state.bytesSent + data.length);
-          final boosted = _applyGainPcm16(data, _gain);
-          _feedToPlayer(boosted);
+          _feedToPlayer(data);
         },
         onError: (e, st) {
           debugPrint('audio stream error: $e');
@@ -146,7 +154,7 @@ class RecordingNotifier extends Notifier<RecordingState> {
         break;
       case RecordState.stop:
         _timer?.cancel();
-        state = state.copyWith(recordDuration: 0);
+        state = state.copyWith(recordDuration: Duration.zero);
         break;
     }
   }
@@ -154,7 +162,9 @@ class RecordingNotifier extends Notifier<RecordingState> {
   void _startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
-      state = state.copyWith(recordDuration: state.recordDuration + 1);
+      state = state.copyWith(
+        recordDuration: state.recordDuration + const Duration(seconds: 1),
+      );
     });
   }
 
@@ -173,29 +183,12 @@ class RecordingNotifier extends Notifier<RecordingState> {
     }
   }
 
-  Uint8List _applyGainPcm16(Uint8List bytes, double gain) {
-    final out = Uint8List(bytes.length);
-    for (int i = 0; i + 1 < bytes.length; i += 2) {
-      final lo = bytes[i];
-      final hi = bytes[i + 1];
-      int v = (hi << 8) | lo;
-      if (v & 0x8000 != 0) v -= 0x10000;
-
-      int boosted = (v * gain).round();
-      if (boosted > 32767) boosted = 32767;
-      if (boosted < -32768) boosted = -32768;
-
-      out[i] = boosted & 0xFF;
-      out[i + 1] = (boosted >> 8) & 0xFF;
-    }
-    return out;
-  }
-
   void _disposeResources() {
     _timer?.cancel();
     _recordSub?.cancel();
     _amplitudeSub?.cancel();
     _audioStreamSub?.cancel();
     _player.closePlayer();
+    _vadHandler.dispose();
   }
 }

@@ -3,21 +3,21 @@ import 'package:record/record.dart';
 class RecordingState {
   const RecordingState({
     this.recordState = RecordState.stop,
-    this.recordDuration = 0,
+    this.recordDuration = Duration.zero,
     this.bytesSent = 0,
     this.amplitude,
     this.volume = 0.5,
   });
 
   final RecordState recordState;
-  final int recordDuration;
+  final Duration recordDuration;
   final int bytesSent;
   final Amplitude? amplitude;
   final double volume;
 
   RecordingState copyWith({
     RecordState? recordState,
-    int? recordDuration,
+    Duration? recordDuration,
     int? bytesSent,
     Amplitude? amplitude,
     double? volume,

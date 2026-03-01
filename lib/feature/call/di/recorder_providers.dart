@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:record/record.dart';
+import 'package:vad/vad.dart';
 
 import '../domain/usecases/start_recording.dart';
 import '../domain/usecases/stop_recording.dart';
@@ -16,4 +17,8 @@ final startRecordingProvider = Provider<StartRecording>((ref) {
 
 final stopRecordingProvider = Provider<StopRecording>((ref) {
   return StopRecording(audioRecorder: ref.watch(audioRecorderProvider));
+});
+
+final vadHandlerProvider = Provider<VadHandler>((ref) {
+  return VadHandler.create();
 });

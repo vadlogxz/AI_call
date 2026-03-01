@@ -17,8 +17,9 @@ dependencies:
   shadcn_ui: ^0.27.1
   permission_handler: ^12.0.1
   flutter_sound: ^9.30.0
-  record: ^6.2.0
   flutter_riverpod: ^3.2.1
+  record: ^6.2.0
+  vad: ^0.0.7+1
 
 dev_dependencies:
   flutter_test:
