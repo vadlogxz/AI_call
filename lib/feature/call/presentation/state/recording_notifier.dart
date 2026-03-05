@@ -1,7 +1,7 @@
 import 'dart:async';
 
+import 'package:elia/core/config/vad_config.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:record/record.dart';
 import 'package:vad/vad.dart';
@@ -15,31 +15,32 @@ final recordingNotifierProvider =
     NotifierProvider<RecordingNotifier, RecordingState>(RecordingNotifier.new);
 
 class RecordingNotifier extends Notifier<RecordingState> {
-  static const int _playChunkSize = 512;
-
   late final AudioRecorder _audioRecorder;
   late final StartRecording _startRecording;
   late final StopRecording _stopRecording;
-  late final FlutterSoundPlayer _player;
   late final VadHandler _vadHandler;
 
-  bool _playerReady = false;
   bool _initialized = false;
   Timer? _timer;
   StreamSubscription<RecordState>? _recordSub;
   StreamSubscription<Amplitude>? _amplitudeSub;
   StreamSubscription<Uint8List>? _audioStreamSub;
 
+  StreamSubscription? _realStartSub;
+  StreamSubscription? _speechStartSub;
+  StreamSubscription? _speechEndSub;
+
+  final VadConfig _vadConfig = VadConfig.getDefault();
+
   @override
   RecordingState build() {
     _audioRecorder = ref.watch(audioRecorderProvider);
     _startRecording = ref.watch(startRecordingProvider);
     _stopRecording = ref.watch(stopRecordingProvider);
-    _vadHandler = ref.watch(vadHandlerProvider);
+    _vadHandler = VadHandler.create();
 
-    state = const RecordingState();
     if (!_initialized) {
-      _player = FlutterSoundPlayer();
+      state = const RecordingState();
       _recordSub = _audioRecorder.onStateChanged().listen(_handleRecordState);
       _amplitudeSub = _audioRecorder
           .onAmplitudeChanged(const Duration(milliseconds: 300))
@@ -52,6 +53,19 @@ class RecordingNotifier extends Notifier<RecordingState> {
               );
             }
           });
+
+      _realStartSub = _vadHandler.onRealSpeechStart.listen((_) {
+        debugPrint('✅ REAL SPEECH START');
+      });
+
+      _speechStartSub = _vadHandler.onSpeechStart.listen((_) {
+        debugPrint('🟡 SPEECH START (may include noise)');
+      });
+
+      _speechEndSub = _vadHandler.onSpeechEnd.listen((_) {
+        debugPrint('🛑 SPEECH END');
+      });
+
       ref.onDispose(_disposeResources);
       _initialized = true;
     }
@@ -61,49 +75,33 @@ class RecordingNotifier extends Notifier<RecordingState> {
   Future<void> start() async {
     debugPrint('before start: recordState=${state.recordState}');
     try {
-      if (!_playerReady) {
-        await _player.openPlayer();
-        _playerReady = true;
-      }
-
-      debugPrint('Player opened: isOpen=${_player.isOpen()}');
-
-      const encoder = AudioEncoder.pcm16bits;
-      _player.setVolume(state.volume);
-      await _player.startPlayerFromStream(
-        codec: Codec.pcm16,
-        numChannels: 1,
-        sampleRate: 16000,
-        interleaved: true,
-        bufferSize: _playChunkSize,
-      );
-
-      debugPrint('Player started with PCM 16-bit, 1 channel, 16kHz');
-      final stream = await _startRecording(encoder);
+      final stream = await _startRecording();
       debugPrint('startRecording returned null? ${stream == null}');
       if (stream == null) {
-        await _player.stopPlayer();
         return;
       }
 
-      debugPrint('Recording started with encoder: ${encoder.name}');
+      debugPrint('Recording started');
 
-      await _audioStreamSub?.cancel();
       state = state.copyWith(bytesSent: 0, recordDuration: Duration.zero);
 
-      await _vadHandler.startListening(audioStream: stream);
+      await _vadHandler.startListening(
+        audioStream: stream,
+        model: _vadConfig.model.name,
+        frameSamples: _vadConfig.frameSamples,
+
+        positiveSpeechThreshold: _vadConfig.positiveSpeechThreshold,
+        negativeSpeechThreshold: _vadConfig.negativeSpeechThreshold,
+        minSpeechFrames: _vadConfig.minSpeechFrames,
+        preSpeechPadFrames: _vadConfig.preSpeechPadFrames,
+        endSpeechPadFrames: _vadConfig.endSpeechPadFrames,
+        redemptionFrames: _vadConfig.redemptionFrames,
+        numFramesToEmit: _vadConfig.numFramesToEmit,
+      );
 
       _audioStreamSub = stream.listen(
         (data) {
-          debugPrint('Received audio chunk: ${data.length} bytes');
-          debugPrint(
-            'Current state before update: bytesSent=${state.bytesSent}, recordDuration=${state.recordDuration}',
-          );
-          debugPrint(
-            'Amplitude: ${state.amplitude?.current.toStringAsFixed(2)} / ${state.amplitude?.max.toStringAsFixed(2)}',
-          );
           state = state.copyWith(bytesSent: state.bytesSent + data.length);
-          _feedToPlayer(data);
         },
         onError: (e, st) {
           debugPrint('audio stream error: $e');
@@ -122,11 +120,9 @@ class RecordingNotifier extends Notifier<RecordingState> {
 
   Future<void> stop() async {
     try {
-      await _audioStreamSub?.cancel();
-      _audioStreamSub = null;
-
       await _stopRecording();
-      await _player.stopPlayer();
+      await _vadHandler.stopListening();
+      debugPrint('Recording stopped');
     } catch (e, st) {
       debugPrint('Stop error: $e\n$st');
     }
@@ -135,13 +131,6 @@ class RecordingNotifier extends Notifier<RecordingState> {
   Future<void> pause() => _audioRecorder.pause();
 
   Future<void> resume() => _audioRecorder.resume();
-
-  void setVolume(double volume) {
-    state = state.copyWith(volume: volume);
-    if (_playerReady) {
-      _player.setVolume(volume);
-    }
-  }
 
   void _handleRecordState(RecordState recordState) {
     state = state.copyWith(recordState: recordState);
@@ -168,27 +157,14 @@ class RecordingNotifier extends Notifier<RecordingState> {
     });
   }
 
-  void _feedToPlayer(Uint8List data) {
-    final sink = _player.uint8ListSink;
-    if (sink == null) return;
-
-    var offset = 0;
-    while (offset < data.length) {
-      final end =
-          (offset + _playChunkSize <= data.length)
-              ? offset + _playChunkSize
-              : data.length;
-      sink.add(data.sublist(offset, end));
-      offset = end;
-    }
-  }
-
   void _disposeResources() {
     _timer?.cancel();
     _recordSub?.cancel();
     _amplitudeSub?.cancel();
     _audioStreamSub?.cancel();
-    _player.closePlayer();
+    _realStartSub?.cancel();
+    _speechStartSub?.cancel();
+    _speechEndSub?.cancel();
     _vadHandler.dispose();
   }
 }

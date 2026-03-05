@@ -20,6 +20,14 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       recordingNotifierProvider.notifier,
     );
 
+    void toggleRecording() {
+      if (recordingState.recordState == RecordState.record) {
+        recordingNotifier.stop();
+      } else {
+        recordingNotifier.start();
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text("Call Screen")),
       body: SafeArea(
@@ -39,12 +47,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                           : Colors.blue,
                 ),
                 decoration: ShadDecoration(shape: BoxShape.circle),
-                onLongPress: () {
-                  recordingNotifier.start();
-                },
-                onLongPressUp: () {
-                  recordingNotifier.stop();
-                },
+                onPressed: () => toggleRecording(),
               ),
               const SizedBox(height: 20),
               Text('Current State: ${recordingState.recordState}'),
@@ -59,7 +62,6 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                 'Record Duration: ${recordingState.recordDuration.inMinutes}:${(recordingState.recordDuration.inSeconds % 60).toString().padLeft(2, '0')}  ',
               ),
               SizedBox(height: 20),
-              
             ],
           ),
         ),
