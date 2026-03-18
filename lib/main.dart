@@ -1,4 +1,4 @@
-import 'package:elia/feature/call/presentation/pages/call_screen.dart';
+import 'package:elia/core/presentation/pages/main_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
       appBuilder: (context) {
         return MaterialApp(
           theme: Theme.of(context),
-          home: const CallScreen(),
+          home: const MainShell(),
           // home: Recorder(),
           builder: (context, child) {
             return ShadAppBuilder(child: child!);

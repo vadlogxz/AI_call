@@ -1,4 +1,6 @@
 import 'package:elia/core/config/audio_config.dart';
+import 'package:elia/core/network/client/api_client.dart';
+import 'package:elia/feature/call/data/services/speech_api_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:record/record.dart';
 
@@ -12,7 +14,6 @@ final audioRecorderProvider = Provider<AudioRecorder>((ref) {
 });
 
 final startRecordingProvider = Provider<StartRecording>((ref) {
-  
   return StartRecording(audioRecorder: ref.watch(audioRecorderProvider), config: recordConfig);
 });
 
@@ -20,3 +21,10 @@ final stopRecordingProvider = Provider<StopRecording>((ref) {
   return StopRecording(audioRecorder: ref.watch(audioRecorderProvider));
 });
 
+final apiClientProvider = Provider<ApiClient>((ref) {
+  return ApiClient();
+});
+
+final speechApiServiceProvider = Provider<SpeechApiService>((ref) {
+  return SpeechApiService(ref.watch(apiClientProvider));
+});

@@ -7,6 +7,7 @@ class RecordingState {
     this.bytesSent = 0,
     this.amplitude,
     this.volume = 0.5,
+    this.lastTranscription,
   });
 
   final RecordState recordState;
@@ -14,6 +15,7 @@ class RecordingState {
   final int bytesSent;
   final Amplitude? amplitude;
   final double volume;
+  final String? lastTranscription;
 
   RecordingState copyWith({
     RecordState? recordState,
@@ -21,6 +23,7 @@ class RecordingState {
     int? bytesSent,
     Amplitude? amplitude,
     double? volume,
+    String? lastTranscription,
   }) {
     return RecordingState(
       recordState: recordState ?? this.recordState,
@@ -28,6 +31,7 @@ class RecordingState {
       bytesSent: bytesSent ?? this.bytesSent,
       amplitude: amplitude ?? this.amplitude,
       volume: volume ?? this.volume,
+      lastTranscription: lastTranscription ?? this.lastTranscription,
     );
   }
 }

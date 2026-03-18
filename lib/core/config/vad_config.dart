@@ -31,12 +31,12 @@ class VadConfig {
       sampleRate: 16000,
       frameSamples: 512,
 
-      positiveSpeechThreshold: 0.65,
-      negativeSpeechThreshold: 0.35,
-      minSpeechFrames: 12,
-      preSpeechPadFrames: 3,
-      endSpeechPadFrames: 10,
-      redemptionFrames: 60,
+      positiveSpeechThreshold: 0.45,
+      negativeSpeechThreshold: 0.25,
+      minSpeechFrames: 3,
+      preSpeechPadFrames: 4,
+      endSpeechPadFrames: 6,
+      redemptionFrames: 8,
       numFramesToEmit: 8,
     );
   }
