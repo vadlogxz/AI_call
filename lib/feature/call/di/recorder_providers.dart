@@ -1,5 +1,7 @@
 import 'package:elia/core/config/audio_config.dart';
 import 'package:elia/core/network/client/api_client.dart';
+import 'package:elia/feature/call/data/services/audio_playback_service.dart';
+import 'package:elia/feature/call/data/services/conversation_api_service.dart';
 import 'package:elia/feature/call/data/services/speech_api_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:record/record.dart';
@@ -27,4 +29,14 @@ final apiClientProvider = Provider<ApiClient>((ref) {
 
 final speechApiServiceProvider = Provider<SpeechApiService>((ref) {
   return SpeechApiService(ref.watch(apiClientProvider));
+});
+
+final conversationApiServiceProvider = Provider<ConversationApiService>((ref) {
+  return ConversationApiService(ref.watch(apiClientProvider));
+});
+
+final audioPlaybackServiceProvider = Provider<AudioPlaybackService>((ref) {
+  final svc = AudioPlaybackService();
+  ref.onDispose(svc.dispose);
+  return svc;
 });

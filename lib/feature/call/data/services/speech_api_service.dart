@@ -14,6 +14,7 @@ class SpeechApiService {
       final response = await _apiClient.postMultipart(
         ApiEndpoints.sttEndpoint,
         data: FormData.fromMap({
+          'settings': '{"language": "en", "response_language": "en"}',
           'audio': MultipartFile.fromBytes(
             bytes,
             filename: 'audio.pcm',
@@ -29,7 +30,9 @@ class SpeechApiService {
 
       throw FormatException('Unexpected STT response format: $data');
     } on DioException catch (e) {
-      throw Exception('STT request failed [${e.response?.statusCode}]: ${e.message}');
+      throw Exception(
+        'STT request failed [${e.response?.statusCode}]: ${e.message}',
+      );
     }
   }
 }

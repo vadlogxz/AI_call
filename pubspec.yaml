@@ -21,6 +21,8 @@ dependencies:
   record: ^6.2.0
   vad: ^0.0.7+1
   dio: ^5.9.2
+  shared_preferences: ^2.3.3
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:

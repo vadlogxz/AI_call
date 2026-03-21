@@ -5,7 +5,7 @@ import 'package:elia/feature/settings/presentation/pages/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final _currentTabProvider =
+final currentTabProvider =
     NotifierProvider<_TabNotifier, int>(_TabNotifier.new);
 
 class _TabNotifier extends Notifier<int> {
@@ -20,7 +20,7 @@ class MainShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentTab = ref.watch(_currentTabProvider);
+    final currentTab = ref.watch(currentTabProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF020817),
@@ -35,7 +35,7 @@ class MainShell extends ConsumerWidget {
       ),
       bottomNavigationBar: _BottomNav(
         currentIndex: currentTab,
-        onTap: ref.read(_currentTabProvider.notifier).setTab,
+        onTap: ref.read(currentTabProvider.notifier).setTab,
       ),
     );
   }
@@ -58,13 +58,13 @@ class _BottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF0F172A),
-        border: Border(top: BorderSide(color: Color(0xFF1E293B))),
+        color: Color(0xFF080F1E),
+        border: Border(top: BorderSide(color: Color(0xFF1E293B), width: 0.5)),
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 60,
+          height: 64,
           child: Row(
             children: List.generate(_items.length, (i) {
               final item = _items[i];
@@ -73,30 +73,45 @@ class _BottomNav extends StatelessWidget {
                 child: GestureDetector(
                   onTap: () => onTap(i),
                   behavior: HitTestBehavior.opaque,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        selected ? item.$2 : item.$1,
+                  child: Center(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOutCubic,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 7),
+                      decoration: BoxDecoration(
                         color: selected
-                            ? const Color(0xFFF8FAFC)
-                            : const Color(0xFF475569),
-                        size: 22,
+                            ? const Color(0xFF1E293B)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        item.$3,
-                        style: TextStyle(
-                          color: selected
-                              ? const Color(0xFFF8FAFC)
-                              : const Color(0xFF475569),
-                          fontSize: 10,
-                          fontWeight: selected
-                              ? FontWeight.w600
-                              : FontWeight.w400,
-                        ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            selected ? item.$2 : item.$1,
+                            color: selected
+                                ? const Color(0xFFF8FAFC)
+                                : const Color(0xFF475569),
+                            size: 20,
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            item.$3,
+                            style: TextStyle(
+                              color: selected
+                                  ? const Color(0xFFF8FAFC)
+                                  : const Color(0xFF475569),
+                              fontSize: 10,
+                              fontWeight: selected
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                              letterSpacing: selected ? 0.2 : 0,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               );
