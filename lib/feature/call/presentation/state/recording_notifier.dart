@@ -3,6 +3,7 @@ import 'dart:collection';
 
 import 'package:elia/feature/agents/presentation/state/agent_config.dart';
 import 'package:elia/feature/call/data/services/audio_playback_service.dart';
+import 'package:elia/feature/settings/presentation/state/settings_notifier.dart';
 import 'package:elia/feature/call/domain/audio/audio_session_coordinator.dart';
 import 'package:elia/feature/call/domain/audio/audio_session_event.dart';
 import 'package:elia/feature/call/domain/models/recording_status.dart';
@@ -104,11 +105,13 @@ class RecordingNotifier extends Notifier<RecordingState> {
 
       final agentState = ref.read(agentProvider);
       final agent = agentState.selectedAgent ?? kAgents.first;
+      final nativeLanguage = ref.read(settingsProvider).speakingLanguage;
 
       final result = await _processConversation(
         audioBytes: bytes,
         agentId: agent.id,
         targetLanguage: agent.languageCode,
+        nativeLanguage: nativeLanguage,
         history: state.history,
       );
 

@@ -17,12 +17,14 @@ class ConversationApiService {
     required Uint8List audioBytes,
     required String agentId,
     required String targetLanguage,
+    required String nativeLanguage,
     List<ConversationHistoryEntry> history = const [],
   }) async {
     try {
       final settings = jsonEncode({
         'agent_id': agentId,
         'target_language': targetLanguage,
+        'native_language': nativeLanguage,
         if (history.isNotEmpty)
           'history': history.map((m) => m.toJson()).toList(),
       });

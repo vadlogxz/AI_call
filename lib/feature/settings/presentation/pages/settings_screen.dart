@@ -1,4 +1,5 @@
 import 'package:elia/feature/agents/presentation/state/agent_config.dart';
+import 'package:elia/feature/settings/domain/models/theme_preference.dart';
 import 'package:elia/feature/settings/presentation/state/settings_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,9 +12,17 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final settingsNotifier = ref.read(settingsProvider.notifier);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final background = theme.scaffoldBackgroundColor;
+    final panel = isDark ? const Color(0xFF0F172A) : Colors.white;
+    final border = isDark ? const Color(0xFF1E293B) : const Color(0xFFD9E1EC);
+    final title = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final subtitle = isDark ? const Color(0xFF64748B) : const Color(0xFF6B7280);
+    final section = isDark ? const Color(0xFF475569) : const Color(0xFF64748B);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF020817),
+      backgroundColor: background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -21,41 +30,94 @@ class SettingsScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Settings',
                 style: TextStyle(
-                  color: Color(0xFFF8FAFC),
+                  color: title,
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 32),
-
-              // ── Language ──────────────────────────────────────────────────
-              _SectionLabel('My Language'),
+              _SectionLabel('Appearance', color: section),
               const SizedBox(height: 10),
               _SettingsGroup(
+                backgroundColor: panel,
+                borderColor: border,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Theme',
+                          style: TextStyle(
+                            color: title,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Choose how Elia looks across the app',
+                          style: TextStyle(color: subtitle, fontSize: 12),
+                        ),
+                        const SizedBox(height: 12),
+                        SegmentedButton<ThemePreference>(
+                          segments: const [
+                            ButtonSegment(
+                              value: ThemePreference.system,
+                              icon: Icon(Icons.brightness_auto_rounded),
+                              label: Text('System'),
+                            ),
+                            ButtonSegment(
+                              value: ThemePreference.light,
+                              icon: Icon(Icons.light_mode_rounded),
+                              label: Text('Light'),
+                            ),
+                            ButtonSegment(
+                              value: ThemePreference.dark,
+                              icon: Icon(Icons.dark_mode_rounded),
+                              label: Text('Dark'),
+                            ),
+                          ],
+                          selected: {settings.themePreference},
+                          onSelectionChanged: (selection) {
+                            settingsNotifier.setThemePreference(
+                              selection.first,
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _SectionLabel('My Language', color: section),
+              const SizedBox(height: 10),
+              _SettingsGroup(
+                backgroundColor: panel,
+                borderColor: border,
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'I speak in',
                           style: TextStyle(
-                            color: Color(0xFFF8FAFC),
+                            color: title,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
+                        Text(
                           'Used to configure the agent on the backend',
-                          style: TextStyle(
-                            color: Color(0xFF64748B),
-                            fontSize: 12,
-                          ),
+                          style: TextStyle(color: subtitle, fontSize: 12),
                         ),
                         const SizedBox(height: 12),
                         ShadSelect<String>(
@@ -73,8 +135,10 @@ class SettingsScreen extends ConsumerWidget {
                             final lang = langByCode(value);
                             return Row(
                               children: [
-                                Text(lang.$2,
-                                    style: const TextStyle(fontSize: 16)),
+                                Text(
+                                  lang.$2,
+                                  style: const TextStyle(fontSize: 16),
+                                ),
                                 const SizedBox(width: 8),
                                 Text(lang.$3),
                               ],
@@ -85,8 +149,10 @@ class SettingsScreen extends ConsumerWidget {
                               value: l.$1,
                               child: Row(
                                 children: [
-                                  Text(l.$2,
-                                      style: const TextStyle(fontSize: 16)),
+                                  Text(
+                                    l.$2,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
                                   const SizedBox(width: 10),
                                   Text(l.$3),
                                 ],
@@ -99,13 +165,12 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
-
-              // ── Audio ──────────────────────────────────────────────────────
-              _SectionLabel('Audio'),
+              _SectionLabel('Audio', color: section),
               const SizedBox(height: 10),
               _SettingsGroup(
+                backgroundColor: panel,
+                borderColor: border,
                 children: [
                   ShadSwitch(
                     value: settings.autoSend,
@@ -113,26 +178,29 @@ class SettingsScreen extends ConsumerWidget {
                     label: const Text('Auto-send on silence'),
                     sublabel: const Text('Send to STT when speech ends'),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                   ),
-                  const Divider(color: Color(0xFF1E293B), height: 1),
+                  Divider(color: border, height: 1),
                   ShadSwitch(
                     value: settings.hapticFeedback,
                     onChanged: settingsNotifier.setHapticFeedback,
                     label: const Text('Haptic feedback'),
                     sublabel: const Text('Vibrate on speech detection'),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
-
-              // ── Privacy ────────────────────────────────────────────────────
-              _SectionLabel('Privacy'),
+              _SectionLabel('Privacy', color: section),
               const SizedBox(height: 10),
               _SettingsGroup(
+                backgroundColor: panel,
+                borderColor: border,
                 children: [
                   ShadSwitch(
                     value: settings.saveHistory,
@@ -140,28 +208,28 @@ class SettingsScreen extends ConsumerWidget {
                     label: const Text('Save session history'),
                     sublabel: const Text('Store transcriptions locally'),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
-
-              // ── About ──────────────────────────────────────────────────────
-              _SectionLabel('About'),
+              _SectionLabel('About', color: section),
               const SizedBox(height: 10),
               _SettingsGroup(
+                backgroundColor: panel,
+                borderColor: border,
                 children: [
-                  _InfoRow('Version', '1.0.0'),
-                  const Divider(color: Color(0xFF1E293B), height: 1),
-                  _InfoRow('VAD Model', 'Silero v5'),
-                  const Divider(color: Color(0xFF1E293B), height: 1),
-                  _InfoRow('Sample Rate', '16 000 Hz'),
-                  const Divider(color: Color(0xFF1E293B), height: 1),
-                  _InfoRow('Encoder', 'PCM 16-bit'),
+                  const _InfoRow('Version', '1.0.0'),
+                  Divider(color: border, height: 1),
+                  const _InfoRow('VAD Model', 'Silero v5'),
+                  Divider(color: border, height: 1),
+                  const _InfoRow('Sample Rate', '16 000 Hz'),
+                  Divider(color: border, height: 1),
+                  const _InfoRow('Encoder', 'PCM 16-bit'),
                 ],
               ),
-
               const SizedBox(height: 40),
             ],
           ),
@@ -172,15 +240,17 @@ class SettingsScreen extends ConsumerWidget {
 }
 
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.title);
+  const _SectionLabel(this.title, {required this.color});
+
   final String title;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Text(
       title.toUpperCase(),
-      style: const TextStyle(
-        color: Color(0xFF475569),
+      style: TextStyle(
+        color: color,
         fontSize: 11,
         fontWeight: FontWeight.w600,
         letterSpacing: 1.2,
@@ -190,17 +260,24 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _SettingsGroup extends StatelessWidget {
-  const _SettingsGroup({required this.children});
+  const _SettingsGroup({
+    required this.children,
+    required this.backgroundColor,
+    required this.borderColor,
+  });
+
   final List<Widget> children;
+  final Color backgroundColor;
+  final Color borderColor;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF1E293B)),
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,21 +289,25 @@ class _SettingsGroup extends StatelessWidget {
 
 class _InfoRow extends StatelessWidget {
   const _InfoRow(this.label, this.value);
+
   final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final title = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final valueColor =
+        isDark ? const Color(0xFF64748B) : const Color(0xFF6B7280);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
-          Text(label,
-              style: const TextStyle(color: Color(0xFFF8FAFC), fontSize: 14)),
+          Text(label, style: TextStyle(color: title, fontSize: 14)),
           const Spacer(),
-          Text(value,
-              style:
-                  const TextStyle(color: Color(0xFF64748B), fontSize: 14)),
+          Text(value, style: TextStyle(color: valueColor, fontSize: 14)),
         ],
       ),
     );

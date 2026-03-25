@@ -1,6 +1,9 @@
+import 'package:elia/feature/settings/domain/models/theme_preference.dart';
+
 class AppSettings {
   const AppSettings({
     this.speakingLanguage = 'uk',
+    this.themePreference = ThemePreference.system,
     this.autoSend = true,
     this.hapticFeedback = true,
     this.saveHistory = false,
@@ -9,6 +12,7 @@ class AppSettings {
   });
 
   final String speakingLanguage;
+  final ThemePreference themePreference;
   final bool autoSend;
   final bool hapticFeedback;
   final bool saveHistory;
@@ -21,6 +25,7 @@ class AppSettings {
 
   AppSettings copyWith({
     String? speakingLanguage,
+    ThemePreference? themePreference,
     bool? autoSend,
     bool? hapticFeedback,
     bool? saveHistory,
@@ -29,6 +34,7 @@ class AppSettings {
   }) {
     return AppSettings(
       speakingLanguage: speakingLanguage ?? this.speakingLanguage,
+      themePreference: themePreference ?? this.themePreference,
       autoSend: autoSend ?? this.autoSend,
       hapticFeedback: hapticFeedback ?? this.hapticFeedback,
       saveHistory: saveHistory ?? this.saveHistory,

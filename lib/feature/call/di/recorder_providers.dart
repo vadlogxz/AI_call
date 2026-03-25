@@ -5,9 +5,11 @@ import 'package:elia/feature/call/data/engines/vad_speech_detector_engine.dart';
 import 'package:elia/feature/call/data/services/audio_playback_service.dart';
 import 'package:elia/feature/call/data/services/conversation_api_service.dart';
 import 'package:elia/feature/call/data/services/speech_api_service.dart';
+import 'package:elia/feature/call/data/services/word_lookup_api_service.dart';
 import 'package:elia/feature/call/domain/audio/audio_session_coordinator.dart';
 import 'package:elia/feature/call/domain/engines/audio_recorder_engine.dart';
 import 'package:elia/feature/call/domain/engines/speech_detector_engine.dart';
+import 'package:elia/feature/call/domain/usecases/lookup_word.dart';
 import 'package:elia/feature/call/domain/usecases/process_conversation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:record/record.dart';
@@ -54,8 +56,16 @@ final conversationApiServiceProvider = Provider<ConversationApiService>((ref) {
   return ConversationApiService(ref.watch(apiClientProvider));
 });
 
+final wordLookupApiServiceProvider = Provider<WordLookupApiService>((ref) {
+  return WordLookupApiService(ref.watch(apiClientProvider));
+});
+
 final processConversationProvider = Provider<ProcessConversation>((ref) {
   return ProcessConversation(ref.watch(conversationApiServiceProvider));
+});
+
+final lookupWordProvider = Provider<LookupWord>((ref) {
+  return LookupWord(ref.watch(wordLookupApiServiceProvider));
 });
 
 final audioPlaybackServiceProvider = Provider<AudioPlaybackService>((ref) {

@@ -13,12 +13,14 @@ class ProcessConversation {
     required Uint8List audioBytes,
     required String agentId,
     required String targetLanguage,
+    required String nativeLanguage,
     List<ConversationHistoryEntry> history = const [],
   }) {
     return _conversationApiService.process(
       audioBytes: audioBytes,
       agentId: agentId,
       targetLanguage: targetLanguage,
+      nativeLanguage: nativeLanguage,
       history: history,
     );
   }

@@ -1,5 +1,6 @@
 import 'package:elia/feature/settings/data/repositories/settings_repository.dart';
 import 'package:elia/feature/settings/domain/models/app_settings.dart';
+import 'package:elia/feature/settings/domain/models/theme_preference.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SettingsNotifier extends Notifier<AppSettings> {
@@ -13,6 +14,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   Future<void> setSpeakingLanguage(String code) async {
     state = state.copyWith(speakingLanguage: code);
+    await _repo.save(state);
+  }
+
+  Future<void> setThemePreference(ThemePreference preference) async {
+    state = state.copyWith(themePreference: preference);
     await _repo.save(state);
   }
 
@@ -31,7 +37,6 @@ class SettingsNotifier extends Notifier<AppSettings> {
     await _repo.save(state);
   }
 
-  /// Call after a session completes to update the daily streak.
   Future<void> recordSession() async {
     final today = _todayStr();
     final last = state.lastActivityDate;
@@ -40,12 +45,10 @@ class SettingsNotifier extends Notifier<AppSettings> {
     if (last == null) {
       newStreak = 1;
     } else if (last == today) {
-      // Already recorded today, no change.
       return;
     } else if (_isYesterday(last, today)) {
       newStreak = state.streak + 1;
     } else {
-      // Gap > 1 day → reset.
       newStreak = 1;
     }
 
@@ -69,5 +72,6 @@ class SettingsNotifier extends Notifier<AppSettings> {
   }
 }
 
-final settingsProvider =
-    NotifierProvider<SettingsNotifier, AppSettings>(SettingsNotifier.new);
+final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(
+  SettingsNotifier.new,
+);
