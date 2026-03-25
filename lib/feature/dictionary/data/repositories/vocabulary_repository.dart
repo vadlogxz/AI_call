@@ -34,6 +34,14 @@ class VocabularyRepository {
     await _save(words);
   }
 
+  Future<void> updateReviewLevel(String id, int level) async {
+    final words = getAll();
+    final idx = words.indexWhere((w) => w.id == id);
+    if (idx == -1) return;
+    words[idx] = words[idx].copyWith(reviewLevel: level.clamp(0, 5));
+    await _save(words);
+  }
+
   Future<void> _save(List<VocabularyWord> words) async {
     await _prefs.setString(_key, jsonEncode(words.map((w) => w.toJson()).toList()));
   }

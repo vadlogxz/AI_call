@@ -1,3 +1,5 @@
+import 'package:elia/feature/call/domain/models/conversation_result.dart';
+
 class ConversationResponse {
   const ConversationResponse({
     required this.userText,
@@ -15,6 +17,26 @@ class ConversationResponse {
   final bool hasError;
   final List<VocabWord> vocabulary;
 
+  ConversationResult toDomain() {
+    return ConversationResult(
+      userText: userText,
+      replyText: replyText,
+      replyAudioB64: replyAudioB64,
+      corrected: corrected,
+      hasError: hasError,
+      vocabulary: vocabulary
+          .map(
+            (word) => ConversationVocabulary(
+              word: word.word,
+              translation: word.translation,
+              partOfSpeech: word.partOfSpeech,
+              example: word.example,
+            ),
+          )
+          .toList(growable: false),
+    );
+  }
+
   factory ConversationResponse.fromJson(Map<String, dynamic> json) {
     return ConversationResponse(
       userText: json['user_text'] as String? ?? '',
@@ -22,9 +44,10 @@ class ConversationResponse {
       replyAudioB64: json['reply_audio'] as String? ?? '',
       corrected: json['corrected'] as String?,
       hasError: json['has_error'] as bool? ?? false,
-      vocabulary: (json['vocabulary'] as List<dynamic>? ?? [])
-          .map((e) => VocabWord.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      vocabulary:
+          (json['vocabulary'] as List<dynamic>? ?? [])
+              .map((e) => VocabWord.fromJson(e as Map<String, dynamic>))
+              .toList(),
     );
   }
 }
@@ -52,9 +75,9 @@ class VocabWord {
   }
 
   Map<String, dynamic> toJson() => {
-        'word': word,
-        'translation': translation,
-        'part_of_speech': partOfSpeech,
-        'example': example,
-      };
+    'word': word,
+    'translation': translation,
+    'part_of_speech': partOfSpeech,
+    'example': example,
+  };
 }

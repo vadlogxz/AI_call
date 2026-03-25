@@ -1,16 +1,9 @@
-import 'package:elia/feature/call/data/models/conversation_response.dart';
-import 'package:record/record.dart';
+import 'package:elia/feature/call/domain/models/audio_level.dart';
+import 'package:elia/feature/call/domain/models/conversation_history_entry.dart';
+import 'package:elia/feature/call/domain/models/conversation_result.dart';
+import 'package:elia/feature/call/domain/models/recording_status.dart';
 
 enum ConversationPhase { idle, listening, processing, playing }
-
-class HistoryMessage {
-  const HistoryMessage({required this.role, required this.content});
-
-  final String role; // 'user' | 'assistant'
-  final String content;
-
-  Map<String, String> toJson() => {'role': role, 'content': content};
-}
 
 class ConversationMessage {
   const ConversationMessage({
@@ -30,7 +23,7 @@ class ConversationMessage {
 
 class RecordingState {
   const RecordingState({
-    this.recordState = RecordState.stop,
+    this.recordingStatus = RecordingStatus.stopped,
     this.recordDuration = Duration.zero,
     this.bytesSent = 0,
     this.amplitude,
@@ -42,40 +35,46 @@ class RecordingState {
     this.currentGrammarCorrection,
     this.isPlayingTts = false,
     this.pendingVocabulary = const [],
+    this.sessionSavedWords = const [],
   });
 
-  final RecordState recordState;
+  final RecordingStatus recordingStatus;
   final Duration recordDuration;
   final int bytesSent;
-  final Amplitude? amplitude;
+  final AudioLevel? amplitude;
   final double volume;
   final String? lastTranscription;
 
   // Conversation
   final ConversationPhase phase;
   final List<ConversationMessage> messages;
-  final List<HistoryMessage> history;
+  final List<ConversationHistoryEntry> history;
   final String? currentGrammarCorrection;
   final bool isPlayingTts;
-  final List<VocabWord> pendingVocabulary;
+  final List<ConversationVocabulary> pendingVocabulary;
+
+  /// Words saved to dictionary during the current session (word strings only).
+  final List<String> sessionSavedWords;
 
   RecordingState copyWith({
-    RecordState? recordState,
+    RecordingStatus? recordingStatus,
     Duration? recordDuration,
     int? bytesSent,
-    Amplitude? amplitude,
+    AudioLevel? amplitude,
     double? volume,
     String? lastTranscription,
     ConversationPhase? phase,
     List<ConversationMessage>? messages,
-    List<HistoryMessage>? history,
+    List<ConversationHistoryEntry>? history,
     String? currentGrammarCorrection,
     bool clearGrammarCorrection = false,
     bool? isPlayingTts,
-    List<VocabWord>? pendingVocabulary,
+    List<ConversationVocabulary>? pendingVocabulary,
+    List<String>? sessionSavedWords,
+    bool clearSessionSavedWords = false,
   }) {
     return RecordingState(
-      recordState: recordState ?? this.recordState,
+      recordingStatus: recordingStatus ?? this.recordingStatus,
       recordDuration: recordDuration ?? this.recordDuration,
       bytesSent: bytesSent ?? this.bytesSent,
       amplitude: amplitude ?? this.amplitude,
@@ -84,11 +83,16 @@ class RecordingState {
       phase: phase ?? this.phase,
       messages: messages ?? this.messages,
       history: history ?? this.history,
-      currentGrammarCorrection: clearGrammarCorrection
-          ? null
-          : currentGrammarCorrection ?? this.currentGrammarCorrection,
+      currentGrammarCorrection:
+          clearGrammarCorrection
+              ? null
+              : currentGrammarCorrection ?? this.currentGrammarCorrection,
       isPlayingTts: isPlayingTts ?? this.isPlayingTts,
       pendingVocabulary: pendingVocabulary ?? this.pendingVocabulary,
+      sessionSavedWords:
+          clearSessionSavedWords
+              ? []
+              : sessionSavedWords ?? this.sessionSavedWords,
     );
   }
 }

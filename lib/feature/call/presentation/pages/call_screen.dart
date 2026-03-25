@@ -1,9 +1,14 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:elia/core/presentation/widgets/elia_mascot.dart';
+import 'package:elia/feature/call/domain/models/conversation_result.dart';
+import 'package:elia/feature/call/domain/models/recording_status.dart';
+import 'package:elia/feature/call/presentation/widgets/grammar_banner.dart';
+import 'package:elia/feature/call/presentation/widgets/session_summary_sheet.dart';
+import 'package:elia/feature/settings/presentation/state/settings_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:record/record.dart';
 
 import '../../../agents/presentation/state/agent_config.dart';
 import '../../../dictionary/presentation/state/vocabulary_notifier.dart';
@@ -24,6 +29,7 @@ class _CallScreenState extends ConsumerState<CallScreen>
   Timer? _waveTimer;
   final _random = math.Random();
   final ScrollController _scrollController = ScrollController();
+  late final ProviderSubscription<RecordingState> _recordingSubscription;
 
   @override
   void initState() {
@@ -32,9 +38,10 @@ class _CallScreenState extends ConsumerState<CallScreen>
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     );
-    _waveTimer = Timer.periodic(
-      const Duration(milliseconds: 75),
-      _tickWave,
+    _waveTimer = Timer.periodic(const Duration(milliseconds: 75), _tickWave);
+    _recordingSubscription = ref.listenManual<RecordingState>(
+      recordingNotifierProvider,
+      _handleRecordingStateChanged,
     );
   }
 
@@ -42,13 +49,14 @@ class _CallScreenState extends ConsumerState<CallScreen>
     if (!mounted) return;
     final state = ref.read(recordingNotifierProvider);
     final amp = state.amplitude?.current ?? 0.0;
-    final isRecording = state.recordState == RecordState.record;
+    final isRecording = state.recordingStatus == RecordingStatus.recording;
 
     setState(() {
       _waveHeights.removeAt(0);
       if (isRecording && amp > 0.01) {
-        _waveHeights
-            .add((amp * 0.85 + _random.nextDouble() * 0.2).clamp(0.05, 1.0));
+        _waveHeights.add(
+          (amp * 0.85 + _random.nextDouble() * 0.2).clamp(0.05, 1.0),
+        );
       } else {
         _waveHeights.add(0.03 + _random.nextDouble() * 0.03);
       }
@@ -69,6 +77,7 @@ class _CallScreenState extends ConsumerState<CallScreen>
 
   @override
   void dispose() {
+    _recordingSubscription.close();
     _pulseController.dispose();
     _waveTimer?.cancel();
     _scrollController.dispose();
@@ -79,56 +88,32 @@ class _CallScreenState extends ConsumerState<CallScreen>
   Widget build(BuildContext context) {
     final state = ref.watch(recordingNotifierProvider);
     final notifier = ref.read(recordingNotifierProvider.notifier);
-    final isRecording = state.recordState == RecordState.record;
+    final isRecording = state.recordingStatus == RecordingStatus.recording;
     final selectedAgent = ref.watch(agentProvider).selectedAgent;
-
-    ref.listen<RecordingState>(recordingNotifierProvider, (prev, next) {
-      // Pulse animation on recording state
-      final wasRecording = prev?.recordState == RecordState.record;
-      final nowRecording = next.recordState == RecordState.record;
-      if (wasRecording != nowRecording) {
-        if (nowRecording) {
-          _pulseController.repeat();
-        } else {
-          _pulseController.stop();
-          _pulseController.value = 0;
-        }
-      }
-
-      // Auto-scroll on new messages
-      if ((prev?.messages.length ?? 0) != next.messages.length) {
-        _scrollToBottom();
-      }
-
-      // Vocabulary suggestion sheet
-      if ((prev?.pendingVocabulary.isEmpty ?? true) &&
-          next.pendingVocabulary.isNotEmpty) {
-        _showVocabSheet(context, next.pendingVocabulary, notifier);
-      }
-    });
+    final streak = ref.watch(settingsProvider).streak;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF020817),
+      backgroundColor: const Color(0xFF0a0d14),
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(state, selectedAgent),
-            // Grammar banner
+            _buildHeader(state, selectedAgent, streak),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 250),
-              child: state.currentGrammarCorrection != null
-                  ? _buildGrammarBanner(
-                      state.currentGrammarCorrection!,
-                      state.lastTranscription,
-                      notifier,
-                    )
-                  : const SizedBox.shrink(),
+              child:
+                  state.currentGrammarCorrection != null
+                      ? GrammarBanner(
+                        corrected: state.currentGrammarCorrection!,
+                        original: state.lastTranscription,
+                        notifier: notifier,
+                      )
+                      : const SizedBox.shrink(),
             ),
-            // Conversation list
             Expanded(
-              child: state.messages.isEmpty
-                  ? _buildEmptyState(state)
-                  : _buildConversationList(state, selectedAgent),
+              child:
+                  state.messages.isEmpty
+                      ? _buildEmptyState(state)
+                      : _buildConversationList(state, selectedAgent),
             ),
             _buildBottomBar(state, isRecording, notifier),
           ],
@@ -137,225 +122,171 @@ class _CallScreenState extends ConsumerState<CallScreen>
     );
   }
 
-  // ── Header ────────────────────────────────────────────────────────────────
+  void _handleRecordingStateChanged(RecordingState? prev, RecordingState next) {
+    final wasRecording = prev?.recordingStatus == RecordingStatus.recording;
+    final nowRecording = next.recordingStatus == RecordingStatus.recording;
+    if (wasRecording != nowRecording) {
+      if (nowRecording) {
+        _pulseController.repeat();
+      } else {
+        _pulseController.stop();
+        _pulseController.value = 0;
+      }
+    }
 
-  Widget _buildHeader(RecordingState state, BotAgent? selectedAgent) {
+    if ((prev?.messages.length ?? 0) != next.messages.length) {
+      _scrollToBottom();
+    }
+
+    if ((prev?.pendingVocabulary.isEmpty ?? true) &&
+        next.pendingVocabulary.isNotEmpty) {
+      _showVocabSheet(next.pendingVocabulary);
+    }
+
+    final justStopped =
+        prev?.recordingStatus == RecordingStatus.recording &&
+        next.recordingStatus == RecordingStatus.stopped &&
+        next.phase == ConversationPhase.idle;
+    if (justStopped && next.messages.length >= 2) {
+      _showSessionSummary(next);
+    }
+  }
+
+  // ── Header ─────────────────────────────────────────────────────────────────
+
+  Widget _buildHeader(
+    RecordingState state,
+    BotAgent? selectedAgent,
+    int streak,
+  ) {
     final phase = state.phase;
-    final isRecording = state.recordState == RecordState.record;
+    final isRecording = state.recordingStatus == RecordingStatus.recording;
 
-    final (dotColor, label, bgColor, borderColor) = switch (phase) {
-      ConversationPhase.processing => (
-          const Color(0xFF3B82F6),
-          'THINKING',
-          const Color(0xFF1E3A5F),
-          const Color(0xFF3B82F6),
-        ),
-      ConversationPhase.playing => (
-          const Color(0xFFA855F7),
-          'PLAYING',
-          const Color(0xFF2E1B47),
-          const Color(0xFFA855F7),
-        ),
+    final (statusLabel, statusColor) = switch (phase) {
+      ConversationPhase.processing => ('thinking', const Color(0xFF5b78d4)),
+      ConversationPhase.playing => ('speaking', const Color(0xFF5bd47b)),
       ConversationPhase.listening when isRecording => (
-          const Color(0xFF22C55E),
-          'LIVE',
-          const Color(0xFF14532D),
-          const Color(0xFF22C55E),
-        ),
-      _ => (
-          const Color(0xFF475569),
-          'IDLE',
-          const Color(0xFF1E293B),
-          const Color(0xFF334155),
-        ),
+        'live',
+        const Color(0xFF5bd47b),
+      ),
+      _ => ('idle', const Color(0xFF4a5680)),
     };
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'elia',
-                style: TextStyle(
-                  color: Color(0xFFF8FAFC),
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              if (selectedAgent != null)
-                Text(
-                  '${selectedAgent.flag} ${selectedAgent.name}',
-                  style: const TextStyle(
-                    color: Color(0xFF64748B),
-                    fontSize: 12,
-                  ),
-                ),
-            ],
+          const Text(
+            'elia',
+            style: TextStyle(
+              color: Color(0xFFe8eaf5),
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.4,
+            ),
           ),
-          const Spacer(),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: bgColor.withValues(alpha: 0.5),
+              color: const Color(0xFF12192b),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: borderColor.withValues(alpha: 0.5),
-              ),
+              border: Border.all(color: statusColor.withValues(alpha: 0.4)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 6,
-                  height: 6,
+                  width: 5,
+                  height: 5,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: dotColor,
+                    color: statusColor,
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 5),
                 Text(
-                  label,
+                  statusLabel,
                   style: TextStyle(
-                    color: dotColor,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Grammar banner ────────────────────────────────────────────────────────
-
-  Widget _buildGrammarBanner(
-    String corrected,
-    String? original,
-    RecordingNotifier notifier,
-  ) {
-    return Container(
-      key: const ValueKey('grammar-banner'),
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF451A03).withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.edit_note_rounded,
-              color: Color(0xFFF59E0B), size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Grammar note',
-                  style: TextStyle(
-                    color: Color(0xFFF59E0B),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                if (original != null && original.isNotEmpty)
-                  Text(
-                    'You said: "$original"',
-                    style: const TextStyle(
-                      color: Color(0xFF94A3B8),
-                      fontSize: 12,
-                    ),
-                  ),
-                const SizedBox(height: 2),
-                Text(
-                  '→ $corrected',
-                  style: const TextStyle(
-                    color: Color(0xFFFBBF24),
-                    fontSize: 13,
+                    color: statusColor,
+                    fontSize: 10,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
           ),
-          GestureDetector(
-            onTap: notifier.clearGrammarFeedback,
-            child: const Icon(Icons.close_rounded,
-                color: Color(0xFF64748B), size: 18),
-          ),
+          const Spacer(),
+          if (streak > 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1a1200),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFF3a2800)),
+              ),
+              child: Text(
+                '🔥 $streak',
+                style: const TextStyle(
+                  color: Color(0xFFe8a030),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  // ── Empty state ───────────────────────────────────────────────────────────
+  // ── Empty state (with mascot) ──────────────────────────────────────────────
 
   Widget _buildEmptyState(RecordingState state) {
-    final isRecording = state.recordState == RecordState.record;
+    final phase = state.phase;
+    final isRecording = state.recordingStatus == RecordingStatus.recording;
+
+    final mascotState = switch (phase) {
+      ConversationPhase.processing => MascotState.thinking,
+      ConversationPhase.playing => MascotState.speaking,
+      ConversationPhase.listening when isRecording => MascotState.speaking,
+      _ => MascotState.idle,
+    };
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          AnimatedContainer(
+          EliaMascot(
+            state: mascotState,
+            size: 110,
+            showRings: isRecording || phase == ConversationPhase.playing,
+          ),
+          const SizedBox(height: 12),
+          AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isRecording
-                  ? const Color(0xFF22C55E).withValues(alpha: 0.08)
-                  : const Color(0xFF1E293B).withValues(alpha: 0.5),
-              border: Border.all(
-                color: isRecording
-                    ? const Color(0xFF22C55E).withValues(alpha: 0.2)
-                    : const Color(0xFF1E293B),
+            child: Text(
+              key: ValueKey(phase),
+              switch (phase) {
+                ConversationPhase.processing => 'Thinking...',
+                ConversationPhase.playing => 'Speaking...',
+                ConversationPhase.listening when isRecording => 'Listening...',
+                _ => 'Tap the mic to start',
+              },
+              style: TextStyle(
+                color:
+                    isRecording || phase != ConversationPhase.idle
+                        ? const Color(0xFF5bd47b)
+                        : const Color(0xFF4a5680),
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
               ),
             ),
-            child: Icon(
-              isRecording
-                  ? Icons.graphic_eq_rounded
-                  : Icons.record_voice_over_outlined,
-              color: isRecording
-                  ? const Color(0xFF22C55E)
-                  : const Color(0xFF334155),
-              size: 30,
-            ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            isRecording ? 'Listening...' : 'Tap the mic to start',
-            style: TextStyle(
-              color: isRecording
-                  ? const Color(0xFF22C55E)
-                  : const Color(0xFF475569),
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          if (!isRecording) ...[
+          if (phase == ConversationPhase.idle) ...[
             const SizedBox(height: 6),
             const Text(
               'Your conversation will appear here',
-              style: TextStyle(
-                color: Color(0xFF334155),
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Color(0xFF2e3858), fontSize: 12),
             ),
           ],
         ],
@@ -363,12 +294,9 @@ class _CallScreenState extends ConsumerState<CallScreen>
     );
   }
 
-  // ── Conversation list ─────────────────────────────────────────────────────
+  // ── Conversation list ──────────────────────────────────────────────────────
 
-  Widget _buildConversationList(
-    RecordingState state,
-    BotAgent? selectedAgent,
-  ) {
+  Widget _buildConversationList(RecordingState state, BotAgent? selectedAgent) {
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -388,21 +316,33 @@ class _CallScreenState extends ConsumerState<CallScreen>
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(16).copyWith(
-                  bottomRight: const Radius.circular(4),
-                ),
+                color: const Color(0xFF1a2550),
+                borderRadius: BorderRadius.circular(
+                  14,
+                ).copyWith(bottomRight: const Radius.circular(4)),
               ),
-              child: Text(
-                msg.text,
-                style: const TextStyle(
-                  color: Color(0xFFF1F5F9),
-                  fontSize: 14,
-                  height: 1.5,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'ти',
+                    style: const TextStyle(
+                      color: Color(0xFF4a5680),
+                      fontSize: 9,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    msg.text,
+                    style: const TextStyle(
+                      color: Color(0xFFd8e0f5),
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
               ),
             ),
             if (msg.corrected != null) ...[
@@ -414,10 +354,7 @@ class _CallScreenState extends ConsumerState<CallScreen>
                 ),
                 decoration: BoxDecoration(
                   border: const Border(
-                    left: BorderSide(
-                      color: Color(0xFFF59E0B),
-                      width: 2,
-                    ),
+                    left: BorderSide(color: Color(0xFFF59E0B), width: 2),
                   ),
                   color: const Color(0xFF451A03).withValues(alpha: 0.3),
                 ),
@@ -442,21 +379,20 @@ class _CallScreenState extends ConsumerState<CallScreen>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Agent avatar
           Container(
-            width: 28,
-            height: 28,
+            width: 26,
+            height: 26,
             margin: const EdgeInsets.only(right: 8, top: 2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: agent?.avatarColor ?? const Color(0xFF6366F1),
+              color: agent?.avatarColor ?? const Color(0xFF3a4f8a),
             ),
             child: Center(
               child: Text(
                 agent?.initials ?? 'A',
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -464,24 +400,34 @@ class _CallScreenState extends ConsumerState<CallScreen>
           ),
           Expanded(
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A),
-                borderRadius: BorderRadius.circular(16).copyWith(
-                  bottomLeft: const Radius.circular(4),
-                ),
-                border: Border.all(color: const Color(0xFF1E293B)),
+                color: const Color(0xFF13192e),
+                borderRadius: BorderRadius.circular(
+                  14,
+                ).copyWith(bottomLeft: const Radius.circular(4)),
+                border: Border.all(color: const Color(0xFF1e2a4a)),
               ),
-              child: Text(
-                msg.text,
-                style: const TextStyle(
-                  color: Color(0xFFCBD5E1),
-                  fontSize: 14,
-                  height: 1.5,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    agent?.name ?? 'elia',
+                    style: const TextStyle(
+                      color: Color(0xFF4a5680),
+                      fontSize: 9,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    msg.text,
+                    style: const TextStyle(
+                      color: Color(0xFFc8d0e8),
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -490,20 +436,17 @@ class _CallScreenState extends ConsumerState<CallScreen>
     );
   }
 
-  // ── Vocabulary suggestion sheet ───────────────────────────────────────────
+  // ── Vocabulary sheet ───────────────────────────────────────────────────────
 
-  void _showVocabSheet(
-    BuildContext context,
-    List<dynamic> vocab,
-    RecordingNotifier notifier,
-  ) {
+  void _showVocabSheet(List<ConversationVocabulary> vocab) {
+    if (!mounted) return;
     final selected = <int>{...List.generate(vocab.length, (i) => i)};
 
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: const Color(0xFF0c1020),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
         return StatefulBuilder(
@@ -517,7 +460,7 @@ class _CallScreenState extends ConsumerState<CallScreen>
                   const Text(
                     'New words from conversation',
                     style: TextStyle(
-                      color: Color(0xFFF8FAFC),
+                      color: Color(0xFFe8eaf5),
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
@@ -536,18 +479,18 @@ class _CallScreenState extends ConsumerState<CallScreen>
                       title: Text(
                         w.word,
                         style: const TextStyle(
-                          color: Color(0xFFF1F5F9),
+                          color: Color(0xFFe8eaf5),
                           fontSize: 14,
                         ),
                       ),
                       subtitle: Text(
                         w.translation,
                         style: const TextStyle(
-                          color: Color(0xFF64748B),
+                          color: Color(0xFF4a5680),
                           fontSize: 12,
                         ),
                       ),
-                      activeColor: const Color(0xFF22C55E),
+                      activeColor: const Color(0xFF3cb56a),
                       checkColor: Colors.black,
                       contentPadding: EdgeInsets.zero,
                     );
@@ -557,17 +500,24 @@ class _CallScreenState extends ConsumerState<CallScreen>
                     width: double.infinity,
                     child: FilledButton(
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF22C55E),
+                        backgroundColor: const Color(0xFF3cb56a),
                         foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       onPressed: () {
                         Navigator.of(ctx).pop();
-                        final vocabNotifier =
-                            ref.read(vocabularyProvider.notifier);
+                        final vocabNotifier = ref.read(
+                          vocabularyProvider.notifier,
+                        );
+                        final recordingNotifier = ref.read(
+                          recordingNotifierProvider.notifier,
+                        );
                         for (final i in selected) {
                           vocabNotifier.addFromVocabWord(vocab[i]);
                         }
-                        notifier.clearPendingVocabulary();
+                        recordingNotifier.savePendingVocabulary(selected);
                       },
                       child: const Text('Save selected'),
                     ),
@@ -581,7 +531,35 @@ class _CallScreenState extends ConsumerState<CallScreen>
     );
   }
 
-  // ── Bottom bar (waveform + stats + mic) ──────────────────────────────────
+  // ── Session summary ────────────────────────────────────────────────────────
+
+  void _showSessionSummary(RecordingState state) {
+    final duration = state.recordDuration;
+    final savedWords = List<String>.from(state.sessionSavedWords);
+    final messageCount = state.messages.length;
+    final grammarErrors =
+        state.messages.where((m) => m.isUser && m.hasError).length;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await ref.read(settingsProvider.notifier).recordSession();
+      if (!mounted) return;
+      final updatedStreak = ref.read(settingsProvider).streak;
+
+      if (!context.mounted) return;
+      await SessionSummarySheet.show(
+        context: context,
+        duration: duration,
+        newWords: savedWords,
+        grammarCorrections: grammarErrors,
+        messageCount: messageCount,
+        streak: updatedStreak,
+        onContinue: () {},
+      );
+    });
+  }
+
+  // ── Bottom bar ─────────────────────────────────────────────────────────────
 
   Widget _buildBottomBar(
     RecordingState state,
@@ -591,46 +569,48 @@ class _CallScreenState extends ConsumerState<CallScreen>
     final dur = state.recordDuration;
     final mm = dur.inMinutes.toString().padLeft(2, '0');
     final ss = (dur.inSeconds % 60).toString().padLeft(2, '0');
-    final kb = (state.bytesSent / 1024).toStringAsFixed(1);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(0, 8, 0, 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Waveform with edge fades
+          // Waveform
           SizedBox(
-            height: 32,
+            height: 28,
             child: Stack(
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
-                    children: _waveHeights.map((h) {
-                      return Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 1),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 70),
-                            height: (h * 32).clamp(2.0, 32.0),
-                            decoration: BoxDecoration(
-                              color: isRecording
-                                  ? Color.lerp(
-                                      const Color(0xFF166534),
-                                      const Color(0xFF4ADE80),
-                                      h,
-                                    )
-                                  : const Color(0xFF1E293B),
-                              borderRadius: BorderRadius.circular(2),
+                    children:
+                        _waveHeights.map((h) {
+                          return Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 1,
+                              ),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 70),
+                                height: (h * 28).clamp(2.0, 28.0),
+                                decoration: BoxDecoration(
+                                  color:
+                                      isRecording
+                                          ? Color.lerp(
+                                            const Color(0xFF1a3a28),
+                                            const Color(0xFF4ade80),
+                                            h,
+                                          )
+                                          : const Color(0xFF1e2a50),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                          );
+                        }).toList(),
                   ),
                 ),
-                // Left fade
                 Positioned(
                   left: 0,
                   top: 0,
@@ -640,14 +620,13 @@ class _CallScreenState extends ConsumerState<CallScreen>
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          const Color(0xFF020817),
-                          const Color(0xFF020817).withValues(alpha: 0),
+                          const Color(0xFF0a0d14),
+                          const Color(0xFF0a0d14).withValues(alpha: 0),
                         ],
                       ),
                     ),
                   ),
                 ),
-                // Right fade
                 Positioned(
                   right: 0,
                   top: 0,
@@ -657,8 +636,8 @@ class _CallScreenState extends ConsumerState<CallScreen>
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          const Color(0xFF020817).withValues(alpha: 0),
-                          const Color(0xFF020817),
+                          const Color(0xFF0a0d14).withValues(alpha: 0),
+                          const Color(0xFF0a0d14),
                         ],
                       ),
                     ),
@@ -670,49 +649,26 @@ class _CallScreenState extends ConsumerState<CallScreen>
 
           const SizedBox(height: 6),
 
-          // Stats row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '$mm:$ss',
-                style: const TextStyle(
-                  color: Color(0xFF475569),
-                  fontSize: 12,
-                  fontFamily: 'monospace',
-                  letterSpacing: 1.5,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                width: 3,
-                height: 3,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                '$kb KB',
-                style: const TextStyle(
-                  color: Color(0xFF334155),
-                  fontSize: 12,
-                ),
-              ),
-            ],
+          // Timer
+          Text(
+            '$mm:$ss',
+            style: const TextStyle(
+              color: Color(0xFF4a5680),
+              fontSize: 12,
+              fontFamily: 'monospace',
+              letterSpacing: 1.5,
+            ),
           ),
 
           const SizedBox(height: 14),
 
-          // Mic button (compact)
           _buildMicButton(isRecording, state, notifier),
         ],
       ),
     );
   }
 
-  // ── Mic button ────────────────────────────────────────────────────────────
+  // ── Mic button ─────────────────────────────────────────────────────────────
 
   Widget _buildMicButton(
     bool isRecording,
@@ -740,21 +696,21 @@ class _CallScreenState extends ConsumerState<CallScreen>
           child: Opacity(
             opacity: isPlayingTts ? 0.5 : 1.0,
             child: SizedBox(
-              width: 180,
-              height: 180,
+              width: 160,
+              height: 160,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
                   if (isRecording && !isPlayingTts)
                     Opacity(
-                      opacity: (1.0 - pulse) * 0.25,
+                      opacity: (1.0 - pulse) * 0.22,
                       child: Container(
-                        width: 110 + pulse * 60 + amp * 20,
-                        height: 110 + pulse * 60 + amp * 20,
+                        width: 100 + pulse * 50 + amp * 18,
+                        height: 100 + pulse * 50 + amp * 18,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: const Color(0xFF22C55E),
+                            color: const Color(0xFF3cb56a),
                             width: 1,
                           ),
                         ),
@@ -762,14 +718,14 @@ class _CallScreenState extends ConsumerState<CallScreen>
                     ),
                   if (isRecording && !isPlayingTts)
                     Opacity(
-                      opacity: (1.0 - pulse) * 0.45,
+                      opacity: (1.0 - pulse) * 0.4,
                       child: Container(
-                        width: 110 + pulse * 30 + amp * 12,
-                        height: 110 + pulse * 30 + amp * 12,
+                        width: 98 + pulse * 25 + amp * 10,
+                        height: 98 + pulse * 25 + amp * 10,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: const Color(0xFF22C55E),
+                            color: const Color(0xFF3cb56a),
                             width: 1.5,
                           ),
                         ),
@@ -777,60 +733,68 @@ class _CallScreenState extends ConsumerState<CallScreen>
                     ),
                   if (!isRecording || isPlayingTts)
                     Container(
-                      width: 108,
-                      height: 108,
+                      width: 96,
+                      height: 96,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isPlayingTts
-                              ? const Color(0xFFA855F7).withValues(alpha: 0.4)
-                              : const Color(0xFF1E293B),
+                          color:
+                              isPlayingTts
+                                  ? const Color(
+                                    0xFF8b78e4,
+                                  ).withValues(alpha: 0.4)
+                                  : const Color(0xFF1e2a50),
                           width: 1.5,
                         ),
                       ),
                     ),
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 250),
-                    width: 88,
-                    height: 88,
+                    width: 76,
+                    height: 76,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isPlayingTts
-                          ? const Color(0xFF2E1B47)
-                          : isRecording
-                              ? const Color(0xFF15803D)
-                              : const Color(0xFF0F172A),
+                      color:
+                          isPlayingTts
+                              ? const Color(0xFF1a1535)
+                              : isRecording
+                              ? const Color(0xFF0d2018)
+                              : const Color(0xFF111827),
                       border: Border.all(
-                        color: isPlayingTts
-                            ? const Color(0xFFA855F7)
-                            : isRecording
-                                ? const Color(0xFF22C55E)
-                                : const Color(0xFF334155),
-                        width: 2,
+                        color:
+                            isPlayingTts
+                                ? const Color(0xFF8b78e4)
+                                : isRecording
+                                ? const Color(0xFF3cb56a)
+                                : const Color(0xFF2a3a6a),
+                        width: 1.5,
                       ),
-                      boxShadow: isRecording && !isPlayingTts
-                          ? [
-                              BoxShadow(
-                                color: const Color(0xFF22C55E)
-                                    .withValues(alpha: 0.28),
-                                blurRadius: 24,
-                                spreadRadius: 2,
-                              )
-                            ]
-                          : null,
+                      boxShadow:
+                          isRecording && !isPlayingTts
+                              ? [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFF3cb56a,
+                                  ).withValues(alpha: 0.22),
+                                  blurRadius: 20,
+                                  spreadRadius: 2,
+                                ),
+                              ]
+                              : null,
                     ),
                     child: Icon(
                       isPlayingTts
                           ? Icons.stop_rounded
                           : isRecording
-                              ? Icons.mic
-                              : Icons.mic_none,
-                      size: 36,
-                      color: isPlayingTts
-                          ? const Color(0xFFA855F7)
-                          : isRecording
-                              ? Colors.white
-                              : const Color(0xFF94A3B8),
+                          ? Icons.mic
+                          : Icons.mic_none,
+                      size: 30,
+                      color:
+                          isPlayingTts
+                              ? const Color(0xFF8b78e4)
+                              : isRecording
+                              ? const Color(0xFF3cb56a)
+                              : const Color(0xFF4a5680),
                     ),
                   ),
                 ],
@@ -841,5 +805,4 @@ class _CallScreenState extends ConsumerState<CallScreen>
       },
     );
   }
-
 }
