@@ -1,4 +1,5 @@
 import 'package:elia/core/presentation/widgets/elia_mascot.dart';
+import 'package:elia/core/theme/elia_theme_extension.dart';
 import 'package:elia/feature/call/domain/models/recording_status.dart';
 import 'package:elia/feature/call/presentation/state/recording_state.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ class CallEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.eliaColors;
     final phase = state.phase;
     final isRecording = state.recordingStatus == RecordingStatus.recording;
 
@@ -43,8 +45,8 @@ class CallEmptyState extends StatelessWidget {
               style: TextStyle(
                 color:
                     isRecording || phase != ConversationPhase.idle
-                        ? const Color(0xFF5bd47b)
-                        : const Color(0xFF4a5680),
+                        ? colors.success
+                        : colors.textMuted,
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),
@@ -52,9 +54,9 @@ class CallEmptyState extends StatelessWidget {
           ),
           if (phase == ConversationPhase.idle) ...[
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Your conversation will appear here',
-              style: TextStyle(color: Color(0xFF2e3858), fontSize: 12),
+              style: TextStyle(color: colors.textSecondary, fontSize: 12),
             ),
           ],
         ],

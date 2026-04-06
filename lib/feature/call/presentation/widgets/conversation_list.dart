@@ -1,3 +1,4 @@
+import 'package:elia/core/theme/elia_theme_extension.dart';
 import 'package:elia/feature/agents/presentation/state/agent_config.dart';
 import 'package:elia/feature/call/di/recorder_providers.dart';
 import 'package:elia/feature/call/domain/models/word_lookup_result.dart';
@@ -6,8 +7,8 @@ import 'package:elia/feature/call/presentation/widgets/word_lookup_sheet.dart';
 import 'package:elia/feature/dictionary/domain/models/vocabulary_word.dart';
 import 'package:elia/feature/dictionary/presentation/state/vocabulary_notifier.dart';
 import 'package:elia/feature/settings/presentation/state/settings_notifier.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ConversationList extends ConsumerWidget {
@@ -44,6 +45,8 @@ class _MessageBubble extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.eliaColors;
+
     if (msg.isUser) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
@@ -53,7 +56,7 @@ class _MessageBubble extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFF1a2550),
+                color: colors.userBubble,
                 borderRadius: BorderRadius.circular(
                   14,
                 ).copyWith(bottomRight: const Radius.circular(4)),
@@ -61,16 +64,16 @@ class _MessageBubble extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text(
+                  Text(
                     'You',
-                    style: TextStyle(color: Color(0xFF4a5680), fontSize: 9),
+                    style: TextStyle(color: colors.textMuted, fontSize: 9),
                   ),
                   const SizedBox(height: 2),
                   _LookupableMessageText(
                     text: msg.text,
                     agent: agent,
-                    textStyle: const TextStyle(
-                      color: Color(0xFFd8e0f5),
+                    textStyle: TextStyle(
+                      color: colors.textSecondary,
                       fontSize: 13,
                       height: 1.5,
                     ),
@@ -86,15 +89,15 @@ class _MessageBubble extends ConsumerWidget {
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  border: const Border(
-                    left: BorderSide(color: Color(0xFFF59E0B), width: 2),
+                  border: Border(
+                    left: BorderSide(color: colors.warning, width: 2),
                   ),
-                  color: const Color(0xFF451A03).withValues(alpha: 0.3),
+                  color: colors.surfaceWarning.withValues(alpha: 0.55),
                 ),
                 child: Text(
-                  '→ ${msg.corrected}',
-                  style: const TextStyle(
-                    color: Color(0xFFFBBF24),
+                  'Correction: ${msg.corrected}',
+                  style: TextStyle(
+                    color: colors.warning,
                     fontSize: 12,
                     fontStyle: FontStyle.italic,
                   ),
@@ -117,7 +120,7 @@ class _MessageBubble extends ConsumerWidget {
             margin: const EdgeInsets.only(right: 8, top: 2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: agent?.avatarColor ?? const Color(0xFF3a4f8a),
+              color: agent?.avatarColor ?? colors.accentPrimary,
             ),
             child: Center(
               child: Text(
@@ -134,28 +137,25 @@ class _MessageBubble extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
               decoration: BoxDecoration(
-                color: const Color(0xFF13192e),
+                color: colors.assistantBubble,
                 borderRadius: BorderRadius.circular(
                   14,
                 ).copyWith(bottomLeft: const Radius.circular(4)),
-                border: Border.all(color: const Color(0xFF1e2a4a)),
+                border: Border.all(color: colors.borderPrimary),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     agent?.name ?? 'Elia',
-                    style: const TextStyle(
-                      color: Color(0xFF4a5680),
-                      fontSize: 9,
-                    ),
+                    style: TextStyle(color: colors.textMuted, fontSize: 9),
                   ),
                   const SizedBox(height: 2),
                   _LookupableMessageText(
                     text: msg.text,
                     agent: agent,
-                    textStyle: const TextStyle(
-                      color: Color(0xFFc8d0e8),
+                    textStyle: TextStyle(
+                      color: colors.textSecondary,
                       fontSize: 13,
                       height: 1.5,
                     ),
@@ -221,7 +221,6 @@ class _LookupableMessageText extends ConsumerWidget {
 
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF0c1020),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -234,6 +233,8 @@ class _LookupableMessageText extends ConsumerWidget {
             nativeLanguage: nativeLanguage,
           ),
           builder: (context, snapshot) {
+            final colors = context.eliaColors;
+
             if (snapshot.connectionState != ConnectionState.done) {
               return const Padding(
                 padding: EdgeInsets.all(24),
@@ -250,16 +251,19 @@ class _LookupableMessageText extends ConsumerWidget {
                   children: [
                     Text(
                       word,
-                      style: const TextStyle(
-                        color: Color(0xFFe8eaf5),
+                      style: TextStyle(
+                        color: colors.textPrimary,
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const Text(
+                    Text(
                       'Could not load translation for this word.',
-                      style: TextStyle(color: Color(0xFFc8d0e8), fontSize: 14),
+                      style: TextStyle(
+                        color: colors.textSecondary,
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),

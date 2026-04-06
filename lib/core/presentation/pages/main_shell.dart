@@ -2,6 +2,7 @@ import 'package:elia/feature/agents/presentation/pages/agents_screen.dart';
 import 'package:elia/feature/call/presentation/pages/call_screen.dart';
 import 'package:elia/feature/dictionary/presentation/pages/dictionary_screen.dart';
 import 'package:elia/feature/settings/presentation/pages/settings_screen.dart';
+import 'package:elia/core/theme/elia_theme_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -58,20 +59,14 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final background = isDark ? const Color(0xFF080F1E) : Colors.white;
-    final border = isDark ? const Color(0xFF1E293B) : const Color(0xFFD9E1EC);
-    final selectedBg =
-        isDark ? const Color(0xFF1E293B) : const Color(0xFFE8F0FF);
-    final selectedFg =
-        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final idleFg = isDark ? const Color(0xFF475569) : const Color(0xFF64748B);
+    final colors = context.eliaColors;
 
     return Container(
       decoration: BoxDecoration(
-        color: background,
-        border: Border(top: BorderSide(color: border, width: 0.5)),
+        color: colors.navBackground,
+        border: Border(
+          top: BorderSide(color: colors.borderPrimary, width: 0.5),
+        ),
       ),
       child: SafeArea(
         top: false,
@@ -94,7 +89,10 @@ class _BottomNav extends StatelessWidget {
                         vertical: 7,
                       ),
                       decoration: BoxDecoration(
-                        color: selected ? selectedBg : Colors.transparent,
+                        color:
+                            selected
+                                ? colors.navSelectedBackground
+                                : Colors.transparent,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -102,14 +100,20 @@ class _BottomNav extends StatelessWidget {
                         children: [
                           Icon(
                             selected ? item.$2 : item.$1,
-                            color: selected ? selectedFg : idleFg,
+                            color:
+                                selected
+                                    ? colors.navSelectedForeground
+                                    : colors.navIdleForeground,
                             size: 20,
                           ),
                           const SizedBox(height: 3),
                           Text(
                             item.$3,
                             style: TextStyle(
-                              color: selected ? selectedFg : idleFg,
+                              color:
+                                  selected
+                                      ? colors.navSelectedForeground
+                                      : colors.navIdleForeground,
                               fontSize: 10,
                               fontWeight:
                                   selected ? FontWeight.w600 : FontWeight.w400,

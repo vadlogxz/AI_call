@@ -1,3 +1,4 @@
+import 'package:elia/core/theme/elia_theme_extension.dart';
 import 'package:elia/feature/call/domain/models/word_lookup_result.dart';
 import 'package:flutter/material.dart';
 
@@ -21,7 +22,6 @@ class WordLookupSheet extends StatelessWidget {
   }) {
     return showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF0c1020),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -33,6 +33,8 @@ class WordLookupSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.eliaColors;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
       child: Column(
@@ -41,8 +43,8 @@ class WordLookupSheet extends StatelessWidget {
         children: [
           Text(
             result.word,
-            style: const TextStyle(
-              color: Color(0xFFe8eaf5),
+            style: TextStyle(
+              color: colors.textPrimary,
               fontSize: 22,
               fontWeight: FontWeight.w700,
             ),
@@ -51,18 +53,18 @@ class WordLookupSheet extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               result.partOfSpeech,
-              style: const TextStyle(
-                color: Color(0xFF8aaaf5),
+              style: TextStyle(
+                color: colors.accentSecondary,
                 fontSize: 12,
                 fontStyle: FontStyle.italic,
               ),
             ),
           ],
           const SizedBox(height: 14),
-          const Text(
+          Text(
             'Translation',
             style: TextStyle(
-              color: Color(0xFF4a5680),
+              color: colors.textMuted,
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
@@ -72,18 +74,18 @@ class WordLookupSheet extends StatelessWidget {
             result.translation.isEmpty
                 ? 'No translation available'
                 : result.translation,
-            style: const TextStyle(
-              color: Color(0xFFe8eaf5),
+            style: TextStyle(
+              color: colors.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
           ),
           if (result.example.isNotEmpty) ...[
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Example',
               style: TextStyle(
-                color: Color(0xFF4a5680),
+                color: colors.textMuted,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
@@ -91,8 +93,8 @@ class WordLookupSheet extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               '"${result.example}"',
-              style: const TextStyle(
-                color: Color(0xFFc8d0e8),
+              style: TextStyle(
+                color: colors.textSecondary,
                 fontSize: 14,
                 height: 1.5,
               ),
@@ -104,9 +106,9 @@ class WordLookupSheet extends StatelessWidget {
             child: FilledButton(
               style: FilledButton.styleFrom(
                 backgroundColor:
-                    isSaved ? const Color(0xFF1e2a50) : const Color(0xFF3cb56a),
+                    isSaved ? colors.surfaceAccent : colors.success,
                 foregroundColor:
-                    isSaved ? const Color(0xFF8aaaf5) : Colors.black,
+                    isSaved ? colors.accentSecondary : Colors.black,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

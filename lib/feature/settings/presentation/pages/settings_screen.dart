@@ -1,3 +1,4 @@
+import 'package:elia/core/theme/elia_theme_extension.dart';
 import 'package:elia/feature/agents/presentation/state/agent_config.dart';
 import 'package:elia/feature/settings/domain/models/theme_preference.dart';
 import 'package:elia/feature/settings/presentation/state/settings_notifier.dart';
@@ -13,16 +14,10 @@ class SettingsScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final settingsNotifier = ref.read(settingsProvider.notifier);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final background = theme.scaffoldBackgroundColor;
-    final panel = isDark ? const Color(0xFF0F172A) : Colors.white;
-    final border = isDark ? const Color(0xFF1E293B) : const Color(0xFFD9E1EC);
-    final title = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final subtitle = isDark ? const Color(0xFF64748B) : const Color(0xFF6B7280);
-    final section = isDark ? const Color(0xFF475569) : const Color(0xFF64748B);
+    final colors = context.eliaColors;
 
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -33,17 +28,17 @@ class SettingsScreen extends ConsumerWidget {
               Text(
                 'Settings',
                 style: TextStyle(
-                  color: title,
+                  color: colors.textPrimary,
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 32),
-              _SectionLabel('Appearance', color: section),
+              _SectionLabel('Appearance', color: colors.textMuted),
               const SizedBox(height: 10),
               _SettingsGroup(
-                backgroundColor: panel,
-                borderColor: border,
+                backgroundColor: colors.surfaceSecondary,
+                borderColor: colors.borderPrimary,
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
@@ -53,7 +48,7 @@ class SettingsScreen extends ConsumerWidget {
                         Text(
                           'Theme',
                           style: TextStyle(
-                            color: title,
+                            color: colors.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
@@ -61,7 +56,10 @@ class SettingsScreen extends ConsumerWidget {
                         const SizedBox(height: 4),
                         Text(
                           'Choose how Elia looks across the app',
-                          style: TextStyle(color: subtitle, fontSize: 12),
+                          style: TextStyle(
+                            color: colors.textMuted,
+                            fontSize: 12,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         SegmentedButton<ThemePreference>(
@@ -95,11 +93,11 @@ class SettingsScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              _SectionLabel('My Language', color: section),
+              _SectionLabel('My Language', color: colors.textMuted),
               const SizedBox(height: 10),
               _SettingsGroup(
-                backgroundColor: panel,
-                borderColor: border,
+                backgroundColor: colors.surfaceSecondary,
+                borderColor: colors.borderPrimary,
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
@@ -109,7 +107,7 @@ class SettingsScreen extends ConsumerWidget {
                         Text(
                           'I speak in',
                           style: TextStyle(
-                            color: title,
+                            color: colors.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
@@ -117,7 +115,10 @@ class SettingsScreen extends ConsumerWidget {
                         const SizedBox(height: 4),
                         Text(
                           'Used to configure the agent on the backend',
-                          style: TextStyle(color: subtitle, fontSize: 12),
+                          style: TextStyle(
+                            color: colors.textMuted,
+                            fontSize: 12,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         ShadSelect<String>(
@@ -166,11 +167,11 @@ class SettingsScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              _SectionLabel('Audio', color: section),
+              _SectionLabel('Audio', color: colors.textMuted),
               const SizedBox(height: 10),
               _SettingsGroup(
-                backgroundColor: panel,
-                borderColor: border,
+                backgroundColor: colors.surfaceSecondary,
+                borderColor: colors.borderPrimary,
                 children: [
                   ShadSwitch(
                     value: settings.autoSend,
@@ -182,7 +183,7 @@ class SettingsScreen extends ConsumerWidget {
                       vertical: 14,
                     ),
                   ),
-                  Divider(color: border, height: 1),
+                  Divider(color: colors.borderPrimary, height: 1),
                   ShadSwitch(
                     value: settings.hapticFeedback,
                     onChanged: settingsNotifier.setHapticFeedback,
@@ -196,11 +197,11 @@ class SettingsScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              _SectionLabel('Privacy', color: section),
+              _SectionLabel('Privacy', color: colors.textMuted),
               const SizedBox(height: 10),
               _SettingsGroup(
-                backgroundColor: panel,
-                borderColor: border,
+                backgroundColor: colors.surfaceSecondary,
+                borderColor: colors.borderPrimary,
                 children: [
                   ShadSwitch(
                     value: settings.saveHistory,
@@ -215,18 +216,18 @@ class SettingsScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              _SectionLabel('About', color: section),
+              _SectionLabel('About', color: colors.textMuted),
               const SizedBox(height: 10),
               _SettingsGroup(
-                backgroundColor: panel,
-                borderColor: border,
+                backgroundColor: colors.surfaceSecondary,
+                borderColor: colors.borderPrimary,
                 children: [
                   const _InfoRow('Version', '1.0.0'),
-                  Divider(color: border, height: 1),
+                  Divider(color: colors.borderPrimary, height: 1),
                   const _InfoRow('VAD Model', 'Silero v5'),
-                  Divider(color: border, height: 1),
+                  Divider(color: colors.borderPrimary, height: 1),
                   const _InfoRow('Sample Rate', '16 000 Hz'),
-                  Divider(color: border, height: 1),
+                  Divider(color: colors.borderPrimary, height: 1),
                   const _InfoRow('Encoder', 'PCM 16-bit'),
                 ],
               ),
@@ -295,19 +296,18 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final title = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final valueColor =
-        isDark ? const Color(0xFF64748B) : const Color(0xFF6B7280);
+    final colors = context.eliaColors;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
-          Text(label, style: TextStyle(color: title, fontSize: 14)),
+          Text(
+            label,
+            style: TextStyle(color: colors.textPrimary, fontSize: 14),
+          ),
           const Spacer(),
-          Text(value, style: TextStyle(color: valueColor, fontSize: 14)),
+          Text(value, style: TextStyle(color: colors.textMuted, fontSize: 14)),
         ],
       ),
     );

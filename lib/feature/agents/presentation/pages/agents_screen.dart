@@ -1,4 +1,5 @@
 import 'package:elia/core/presentation/pages/main_shell.dart';
+import 'package:elia/core/theme/elia_theme_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,9 +11,10 @@ class AgentsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(agentProvider);
+    final colors = context.eliaColors;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF020817),
+      backgroundColor: colors.surfacePrimary,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -22,26 +24,24 @@ class AgentsScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Agents',
                     style: TextStyle(
-                      color: Color(0xFFF8FAFC),
+                      color: colors.textPrimary,
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.5,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Pick a tutor and start speaking',
-                    style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                    style: TextStyle(color: colors.textMuted, fontSize: 14),
                   ),
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
-
             Expanded(
               child: GridView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
@@ -58,18 +58,20 @@ class AgentsScreen extends ConsumerWidget {
                   return _AgentCard(
                     agent: agent,
                     isSelected: isSelected,
-                    onTap: () =>
-                        ref.read(agentProvider.notifier).selectAgent(agent.id),
+                    onTap:
+                        () => ref
+                            .read(agentProvider.notifier)
+                            .selectAgent(agent.id),
                   );
                 },
               ),
             ),
-
             AnimatedSlide(
               duration: const Duration(milliseconds: 320),
-              offset: state.selectedAgent != null
-                  ? Offset.zero
-                  : const Offset(0, 1),
+              offset:
+                  state.selectedAgent != null
+                      ? Offset.zero
+                      : const Offset(0, 1),
               curve: Curves.easeOutCubic,
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 250),
@@ -84,8 +86,6 @@ class AgentsScreen extends ConsumerWidget {
   }
 }
 
-// ── Agent card ────────────────────────────────────────────────────────────────
-
 class _AgentCard extends StatelessWidget {
   const _AgentCard({
     required this.agent,
@@ -97,42 +97,43 @@ class _AgentCard extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  // Derive a lighter tint for the gradient stop
-  Color get _lightColor =>
-      Color.lerp(agent.avatarColor, Colors.white, 0.35)!;
+  Color get _lightColor => Color.lerp(agent.avatarColor, Colors.white, 0.35)!;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.eliaColors;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
-          color: const Color(0xFF0A1628),
+          color: colors.surfaceSecondary,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected
-                ? agent.avatarColor.withValues(alpha: 0.7)
-                : const Color(0xFF1E293B),
+            color:
+                isSelected
+                    ? agent.avatarColor.withValues(alpha: 0.7)
+                    : colors.borderPrimary,
             width: isSelected ? 1.5 : 1,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: agent.avatarColor.withValues(alpha: 0.18),
-                    blurRadius: 20,
-                    spreadRadius: -2,
-                  )
-                ]
-              : null,
+          boxShadow:
+              isSelected
+                  ? [
+                    BoxShadow(
+                      color: agent.avatarColor.withValues(alpha: 0.18),
+                      blurRadius: 20,
+                      spreadRadius: -2,
+                    ),
+                  ]
+                  : null,
         ),
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Gradient avatar
               Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -165,7 +166,6 @@ class _AgentCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Flag badge
                   Positioned(
                     right: -2,
                     bottom: -2,
@@ -173,10 +173,10 @@ class _AgentCard extends StatelessWidget {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0A1628),
+                        color: colors.surfaceSecondary,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFF1E293B),
+                          color: colors.borderPrimary,
                           width: 1.5,
                         ),
                       ),
@@ -190,42 +190,33 @@ class _AgentCard extends StatelessWidget {
                   ),
                 ],
               ),
-
               const SizedBox(height: 14),
-
               Text(
                 agent.name,
-                style: const TextStyle(
-                  color: Color(0xFFF1F5F9),
+                style: TextStyle(
+                  color: colors.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.2,
                 ),
               ),
-
               const SizedBox(height: 4),
-
               Text(
                 agent.specialty,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Color(0xFF64748B),
+                style: TextStyle(
+                  color: colors.textMuted,
                   fontSize: 12,
                   height: 1.35,
                 ),
               ),
-
               const SizedBox(height: 12),
-
-              // Selection dot
               AnimatedContainer(
                 duration: const Duration(milliseconds: 220),
                 height: 5,
                 width: isSelected ? 28 : 4,
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? agent.avatarColor
-                      : const Color(0xFF1E293B),
+                  color: isSelected ? agent.avatarColor : colors.borderPrimary,
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),
@@ -237,26 +228,24 @@ class _AgentCard extends StatelessWidget {
   }
 }
 
-// ── Bottom action bar ─────────────────────────────────────────────────────────
-
 class _ActionBar extends ConsumerWidget {
   const _ActionBar({required this.agent});
+
   final BotAgent? agent;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final a = agent;
     if (a == null) return const SizedBox.shrink();
+    final colors = context.eliaColors;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
+        color: colors.surfaceSecondary,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: a.avatarColor.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: a.avatarColor.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
@@ -283,18 +272,15 @@ class _ActionBar extends ConsumerWidget {
               children: [
                 Text(
                   a.name,
-                  style: const TextStyle(
-                    color: Color(0xFFF1F5F9),
+                  style: TextStyle(
+                    color: colors.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
                   a.languageName,
-                  style: const TextStyle(
-                    color: Color(0xFF64748B),
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: colors.textMuted, fontSize: 12),
                 ),
               ],
             ),

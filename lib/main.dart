@@ -1,5 +1,6 @@
 import 'package:elia/core/di/shared_preferences_provider.dart';
 import 'package:elia/core/presentation/pages/main_shell.dart';
+import 'package:elia/core/theme/app_theme.dart';
 import 'package:elia/feature/settings/presentation/state/settings_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,8 +39,8 @@ class MyApp extends ConsumerWidget {
       appBuilder: (context) {
         return MaterialApp(
           themeMode: settings.themePreference.themeMode,
-          theme: _buildLightTheme(),
-          darkTheme: _buildDarkTheme(),
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
           home: const MainShell(),
           builder: (context, child) {
             return ShadAppBuilder(child: child!);
@@ -48,48 +49,4 @@ class MyApp extends ConsumerWidget {
       },
     );
   }
-}
-
-ThemeData _buildLightTheme() {
-  const scheme = ColorScheme.light(
-    primary: Color(0xFF2563EB),
-    secondary: Color(0xFF0F766E),
-    surface: Color(0xFFF7F9FC),
-    onSurface: Color(0xFF111827),
-  );
-
-  return ThemeData(
-    useMaterial3: true,
-    colorScheme: scheme,
-    scaffoldBackgroundColor: const Color(0xFFF7F9FC),
-    cardColor: Colors.white,
-    dividerColor: const Color(0xFFD9E1EC),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFFF7F9FC),
-      foregroundColor: Color(0xFF111827),
-      elevation: 0,
-    ),
-  );
-}
-
-ThemeData _buildDarkTheme() {
-  const scheme = ColorScheme.dark(
-    primary: Color(0xFF60A5FA),
-    secondary: Color(0xFF34D399),
-    surface: Color(0xFF0A0D14),
-    onSurface: Color(0xFFE8EAF5),
-  );
-
-  return ThemeData(
-    useMaterial3: true,
-    colorScheme: scheme,
-    scaffoldBackgroundColor: const Color(0xFF0A0D14),
-    cardColor: const Color(0xFF0F172A),
-    dividerColor: const Color(0xFF1E293B),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFF0A0D14),
-      foregroundColor: Color(0xFFE8EAF5),
-      elevation: 0,
-    ),
-  );
 }

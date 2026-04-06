@@ -1,3 +1,4 @@
+import 'package:elia/core/theme/elia_theme_extension.dart';
 import 'package:elia/feature/agents/presentation/state/agent_config.dart';
 import 'package:elia/feature/call/domain/models/recording_status.dart';
 import 'package:elia/feature/call/presentation/state/recording_state.dart';
@@ -17,27 +18,25 @@ class CallHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.eliaColors;
     final phase = state.phase;
     final isRecording = state.recordingStatus == RecordingStatus.recording;
 
     final (statusLabel, statusColor) = switch (phase) {
-      ConversationPhase.processing => ('thinking', const Color(0xFF5b78d4)),
-      ConversationPhase.playing => ('speaking', const Color(0xFF5bd47b)),
-      ConversationPhase.listening when isRecording => (
-        'live',
-        const Color(0xFF5bd47b),
-      ),
-      _ => ('idle', const Color(0xFF4a5680)),
+      ConversationPhase.processing => ('thinking', colors.accentPrimary),
+      ConversationPhase.playing => ('speaking', colors.success),
+      ConversationPhase.listening when isRecording => ('live', colors.success),
+      _ => ('idle', colors.textMuted),
     };
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
         children: [
-          const Text(
+          Text(
             'Elia',
             style: TextStyle(
-              color: Color(0xFFe8eaf5),
+              color: colors.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.4,
@@ -47,7 +46,7 @@ class CallHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: const Color(0xFF12192b),
+              color: colors.surfaceSecondary,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: statusColor.withValues(alpha: 0.4)),
             ),
@@ -79,14 +78,14 @@ class CallHeader extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF1a1200),
+                color: colors.streakBackground,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFF3a2800)),
+                border: Border.all(color: colors.streakBorder),
               ),
               child: Text(
-                '🔥 $streak',
-                style: const TextStyle(
-                  color: Color(0xFFe8a030),
+                'Streak $streak',
+                style: TextStyle(
+                  color: colors.streakText,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
