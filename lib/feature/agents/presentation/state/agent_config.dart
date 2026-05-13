@@ -1,4 +1,4 @@
-import 'package:elia/feature/settings/presentation/state/settings_notifier.dart';
+import 'package:elia/feature/profile/presentation/state/settings_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

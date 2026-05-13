@@ -1,4 +1,4 @@
-import 'package:elia/core/theme/elia_theme_extension.dart';
+import 'package:elia/core/theme/app_colors.dart';
 import 'package:elia/feature/call/domain/models/word_lookup_result.dart';
 import 'package:flutter/material.dart';
 
@@ -33,8 +33,6 @@ class WordLookupSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.eliaColors;
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
       child: Column(
@@ -44,7 +42,7 @@ class WordLookupSheet extends StatelessWidget {
           Text(
             result.word,
             style: TextStyle(
-              color: colors.textPrimary,
+              color: AppColors.textPrimary,
               fontSize: 22,
               fontWeight: FontWeight.w700,
             ),
@@ -54,7 +52,7 @@ class WordLookupSheet extends StatelessWidget {
             Text(
               result.partOfSpeech,
               style: TextStyle(
-                color: colors.accentSecondary,
+                color: AppColors.primaryLight,
                 fontSize: 12,
                 fontStyle: FontStyle.italic,
               ),
@@ -64,7 +62,7 @@ class WordLookupSheet extends StatelessWidget {
           Text(
             'Translation',
             style: TextStyle(
-              color: colors.textMuted,
+              color: AppColors.textMuted,
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
@@ -75,7 +73,7 @@ class WordLookupSheet extends StatelessWidget {
                 ? 'No translation available'
                 : result.translation,
             style: TextStyle(
-              color: colors.textPrimary,
+              color: AppColors.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
@@ -85,7 +83,7 @@ class WordLookupSheet extends StatelessWidget {
             Text(
               'Example',
               style: TextStyle(
-                color: colors.textMuted,
+                color: AppColors.textMuted,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
@@ -94,7 +92,7 @@ class WordLookupSheet extends StatelessWidget {
             Text(
               '"${result.example}"',
               style: TextStyle(
-                color: colors.textSecondary,
+                color: AppColors.textSecondary,
                 fontSize: 14,
                 height: 1.5,
               ),
@@ -105,10 +103,8 @@ class WordLookupSheet extends StatelessWidget {
             width: double.infinity,
             child: FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor:
-                    isSaved ? colors.surfaceAccent : colors.success,
-                foregroundColor:
-                    isSaved ? colors.accentSecondary : Colors.black,
+                backgroundColor: isSaved ? AppColors.surfaceAccent : AppColors.success,
+                foregroundColor: isSaved ? AppColors.primaryLight : Colors.black,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

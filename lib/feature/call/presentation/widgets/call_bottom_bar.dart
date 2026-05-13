@@ -1,4 +1,4 @@
-import 'package:elia/core/theme/elia_theme_extension.dart';
+import 'package:elia/core/theme/app_colors.dart';
 import 'package:elia/feature/call/presentation/state/recording_notifier.dart';
 import 'package:elia/feature/call/presentation/state/recording_state.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +21,6 @@ class CallBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.eliaColors;
     final dur = state.recordDuration;
     final mm = dur.inMinutes.toString().padLeft(2, '0');
     final ss = (dur.inSeconds % 60).toString().padLeft(2, '0');
@@ -43,21 +42,14 @@ class CallBottomBar extends StatelessWidget {
                         waveHeights.map((h) {
                           return Expanded(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 1,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 1),
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 70),
                                 height: (h * 28).clamp(2.0, 28.0),
                                 decoration: BoxDecoration(
-                                  color:
-                                      isRecording
-                                          ? Color.lerp(
-                                            colors.surfaceSuccess,
-                                            colors.success,
-                                            h,
-                                          )
-                                          : colors.borderAccent,
+                                  color: isRecording
+                                      ? Color.lerp(AppColors.surfaceSuccess, AppColors.success, h)
+                                      : AppColors.borderAccent,
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
@@ -75,8 +67,8 @@ class CallBottomBar extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          colors.surfacePrimary,
-                          colors.surfacePrimary.withValues(alpha: 0),
+                          AppColors.background,
+                          AppColors.background.withValues(alpha: 0),
                         ],
                       ),
                     ),
@@ -91,8 +83,8 @@ class CallBottomBar extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          colors.surfacePrimary.withValues(alpha: 0),
-                          colors.surfacePrimary,
+                          AppColors.background.withValues(alpha: 0),
+                          AppColors.background,
                         ],
                       ),
                     ),
@@ -105,7 +97,7 @@ class CallBottomBar extends StatelessWidget {
           Text(
             '$mm:$ss',
             style: TextStyle(
-              color: colors.textMuted,
+              color: AppColors.textMuted,
               fontSize: 12,
               fontFamily: 'monospace',
               letterSpacing: 1.5,
@@ -139,7 +131,6 @@ class _MicButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.eliaColors;
     final amp = (state.amplitude?.current ?? 0.0).clamp(0.0, 1.0);
     final isPlayingTts = state.isPlayingTts;
 
@@ -174,7 +165,7 @@ class _MicButton extends StatelessWidget {
                         height: 100 + pulse * 50 + amp * 18,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: colors.success, width: 1),
+                          border: Border.all(color: AppColors.success, width: 1),
                         ),
                       ),
                     ),
@@ -186,7 +177,7 @@ class _MicButton extends StatelessWidget {
                         height: 98 + pulse * 25 + amp * 10,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: colors.success, width: 1.5),
+                          border: Border.all(color: AppColors.success, width: 1.5),
                         ),
                       ),
                     ),
@@ -197,12 +188,9 @@ class _MicButton extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color:
-                              isPlayingTts
-                                  ? const Color(
-                                    0xFF8B78E4,
-                                  ).withValues(alpha: 0.4)
-                                  : colors.borderAccent,
+                          color: isPlayingTts
+                              ? const Color(0xFF8B78E4).withValues(alpha: 0.4)
+                              : AppColors.borderAccent,
                           width: 1.5,
                         ),
                       ),
@@ -213,31 +201,28 @@ class _MicButton extends StatelessWidget {
                     height: 76,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color:
-                          isPlayingTts
-                              ? const Color(0xFF1A1535)
-                              : isRecording
-                              ? colors.surfaceSuccess
-                              : colors.surfaceSecondary,
+                      color: isPlayingTts
+                          ? const Color(0xFF1A1535)
+                          : isRecording
+                          ? AppColors.surfaceSuccess
+                          : AppColors.surface,
                       border: Border.all(
-                        color:
-                            isPlayingTts
-                                ? const Color(0xFF8B78E4)
-                                : isRecording
-                                ? colors.success
-                                : colors.borderAccent,
+                        color: isPlayingTts
+                            ? const Color(0xFF8B78E4)
+                            : isRecording
+                            ? AppColors.success
+                            : AppColors.borderAccent,
                         width: 1.5,
                       ),
-                      boxShadow:
-                          isRecording && !isPlayingTts
-                              ? [
-                                BoxShadow(
-                                  color: colors.success.withValues(alpha: 0.22),
-                                  blurRadius: 20,
-                                  spreadRadius: 2,
-                                ),
-                              ]
-                              : null,
+                      boxShadow: isRecording && !isPlayingTts
+                          ? [
+                              BoxShadow(
+                                color: AppColors.success.withValues(alpha: 0.22),
+                                blurRadius: 20,
+                                spreadRadius: 2,
+                              ),
+                            ]
+                          : null,
                     ),
                     child: Icon(
                       isPlayingTts
@@ -246,12 +231,11 @@ class _MicButton extends StatelessWidget {
                           ? Icons.mic
                           : Icons.mic_none,
                       size: 30,
-                      color:
-                          isPlayingTts
-                              ? const Color(0xFF8B78E4)
-                              : isRecording
-                              ? colors.success
-                              : colors.textMuted,
+                      color: isPlayingTts
+                          ? const Color(0xFF8B78E4)
+                          : isRecording
+                          ? AppColors.success
+                          : AppColors.textMuted,
                     ),
                   ),
                 ],

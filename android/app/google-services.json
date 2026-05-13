@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "826883011886",
+    "project_id": "elia-ai",
+    "storage_bucket": "elia-ai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:826883011886:android:40f9680805a5b5fe73b6bf",
+        "android_client_info": {
+          "package_name": "com.example.elia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqSbfJvaiNk-v8-iYN7gT1JDvWoUkg7q4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

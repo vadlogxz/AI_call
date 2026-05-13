@@ -1,4 +1,4 @@
-import 'package:elia/core/theme/elia_theme_extension.dart';
+import 'package:elia/core/theme/app_colors.dart';
 import 'package:elia/feature/agents/presentation/state/agent_config.dart';
 import 'package:elia/feature/call/di/recorder_providers.dart';
 import 'package:elia/feature/call/domain/models/word_lookup_result.dart';
@@ -6,7 +6,7 @@ import 'package:elia/feature/call/presentation/state/recording_state.dart';
 import 'package:elia/feature/call/presentation/widgets/word_lookup_sheet.dart';
 import 'package:elia/feature/dictionary/domain/models/vocabulary_word.dart';
 import 'package:elia/feature/dictionary/presentation/state/vocabulary_notifier.dart';
-import 'package:elia/feature/settings/presentation/state/settings_notifier.dart';
+import 'package:elia/feature/profile/presentation/state/settings_notifier.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,8 +45,6 @@ class _MessageBubble extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.eliaColors;
-
     if (msg.isUser) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
@@ -56,7 +54,7 @@ class _MessageBubble extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: colors.userBubble,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(
                   14,
                 ).copyWith(bottomRight: const Radius.circular(4)),
@@ -66,14 +64,14 @@ class _MessageBubble extends ConsumerWidget {
                 children: [
                   Text(
                     'You',
-                    style: TextStyle(color: colors.textMuted, fontSize: 9),
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 9),
                   ),
                   const SizedBox(height: 2),
                   _LookupableMessageText(
                     text: msg.text,
                     agent: agent,
                     textStyle: TextStyle(
-                      color: colors.textSecondary,
+                      color: AppColors.textSecondary,
                       fontSize: 13,
                       height: 1.5,
                     ),
@@ -90,14 +88,14 @@ class _MessageBubble extends ConsumerWidget {
                 ),
                 decoration: BoxDecoration(
                   border: Border(
-                    left: BorderSide(color: colors.warning, width: 2),
+                    left: BorderSide(color: AppColors.warning, width: 2),
                   ),
-                  color: colors.surfaceWarning.withValues(alpha: 0.55),
+                  color: AppColors.surfaceWarning.withValues(alpha: 0.55),
                 ),
                 child: Text(
                   'Correction: ${msg.corrected}',
                   style: TextStyle(
-                    color: colors.warning,
+                    color: AppColors.warning,
                     fontSize: 12,
                     fontStyle: FontStyle.italic,
                   ),
@@ -120,7 +118,7 @@ class _MessageBubble extends ConsumerWidget {
             margin: const EdgeInsets.only(right: 8, top: 2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: agent?.avatarColor ?? colors.accentPrimary,
+              color: agent?.avatarColor ?? AppColors.primary,
             ),
             child: Center(
               child: Text(
@@ -137,25 +135,25 @@ class _MessageBubble extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
               decoration: BoxDecoration(
-                color: colors.assistantBubble,
+                color: AppColors.background,
                 borderRadius: BorderRadius.circular(
                   14,
                 ).copyWith(bottomLeft: const Radius.circular(4)),
-                border: Border.all(color: colors.borderPrimary),
+                border: Border.all(color: AppColors.surfaceBorder),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     agent?.name ?? 'Elia',
-                    style: TextStyle(color: colors.textMuted, fontSize: 9),
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 9),
                   ),
                   const SizedBox(height: 2),
                   _LookupableMessageText(
                     text: msg.text,
                     agent: agent,
                     textStyle: TextStyle(
-                      color: colors.textSecondary,
+                      color: AppColors.textSecondary,
                       fontSize: 13,
                       height: 1.5,
                     ),
@@ -233,8 +231,6 @@ class _LookupableMessageText extends ConsumerWidget {
             nativeLanguage: nativeLanguage,
           ),
           builder: (context, snapshot) {
-            final colors = context.eliaColors;
-
             if (snapshot.connectionState != ConnectionState.done) {
               return const Padding(
                 padding: EdgeInsets.all(24),
@@ -252,7 +248,7 @@ class _LookupableMessageText extends ConsumerWidget {
                     Text(
                       word,
                       style: TextStyle(
-                        color: colors.textPrimary,
+                        color: AppColors.textPrimary,
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                       ),
@@ -260,10 +256,7 @@ class _LookupableMessageText extends ConsumerWidget {
                     const SizedBox(height: 12),
                     Text(
                       'Could not load translation for this word.',
-                      style: TextStyle(
-                        color: colors.textSecondary,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
                     ),
                   ],
                 ),

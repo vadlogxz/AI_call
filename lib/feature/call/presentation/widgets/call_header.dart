@@ -1,4 +1,4 @@
-import 'package:elia/core/theme/elia_theme_extension.dart';
+import 'package:elia/core/theme/app_colors.dart';
 import 'package:elia/feature/agents/presentation/state/agent_config.dart';
 import 'package:elia/feature/call/domain/models/recording_status.dart';
 import 'package:elia/feature/call/presentation/state/recording_state.dart';
@@ -18,15 +18,14 @@ class CallHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.eliaColors;
     final phase = state.phase;
     final isRecording = state.recordingStatus == RecordingStatus.recording;
 
     final (statusLabel, statusColor) = switch (phase) {
-      ConversationPhase.processing => ('thinking', colors.accentPrimary),
-      ConversationPhase.playing => ('speaking', colors.success),
-      ConversationPhase.listening when isRecording => ('live', colors.success),
-      _ => ('idle', colors.textMuted),
+      ConversationPhase.processing => ('thinking', AppColors.primary),
+      ConversationPhase.playing => ('speaking', AppColors.success),
+      ConversationPhase.listening when isRecording => ('live', AppColors.success),
+      _ => ('idle', AppColors.textMuted),
     };
 
     return Padding(
@@ -36,7 +35,7 @@ class CallHeader extends StatelessWidget {
           Text(
             'Elia',
             style: TextStyle(
-              color: colors.textPrimary,
+              color: AppColors.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.4,
@@ -46,7 +45,7 @@ class CallHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: colors.surfaceSecondary,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: statusColor.withValues(alpha: 0.4)),
             ),
@@ -78,14 +77,14 @@ class CallHeader extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: colors.streakBackground,
+                color: AppColors.streakBackground,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: colors.streakBorder),
+                border: Border.all(color: AppColors.streakBorder),
               ),
               child: Text(
                 'Streak $streak',
                 style: TextStyle(
-                  color: colors.streakText,
+                  color: AppColors.warning,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),

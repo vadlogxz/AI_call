@@ -1,5 +1,5 @@
-import 'package:elia/core/presentation/widgets/elia_mascot.dart';
-import 'package:elia/core/theme/elia_theme_extension.dart';
+import 'package:elia/core/theme/app_colors.dart';
+import 'package:elia/shared/widgets/elia_mascot.dart';
 import 'package:elia/feature/call/domain/models/recording_status.dart';
 import 'package:elia/feature/call/presentation/state/recording_state.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +11,6 @@ class CallEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.eliaColors;
     final phase = state.phase;
     final isRecording = state.recordingStatus == RecordingStatus.recording;
 
@@ -43,10 +42,9 @@ class CallEmptyState extends StatelessWidget {
                 _ => 'Tap the mic to start',
               },
               style: TextStyle(
-                color:
-                    isRecording || phase != ConversationPhase.idle
-                        ? colors.success
-                        : colors.textMuted,
+                color: isRecording || phase != ConversationPhase.idle
+                    ? AppColors.success
+                    : AppColors.textMuted,
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),
@@ -56,7 +54,7 @@ class CallEmptyState extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               'Your conversation will appear here',
-              style: TextStyle(color: colors.textSecondary, fontSize: 12),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
             ),
           ],
         ],

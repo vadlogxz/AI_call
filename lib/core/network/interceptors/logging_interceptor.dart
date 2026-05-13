@@ -1,38 +1,39 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
+import 'package:elia/core/logging/app_logger.dart';
 
 class LoggingInterceptor extends Interceptor {
+
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    debugPrint('→ ${options.method} ${options.uri}');
-    if (options.data is FormData) {
-      final fields = (options.data as FormData).fields;
-      final files = (options.data as FormData).files
-          .map((f) => '${f.key}: ${f.value.filename} (${f.value.length}b)')
-          .toList();
-      if (fields.isNotEmpty) debugPrint('  fields: $fields');
-      if (files.isNotEmpty) debugPrint('  files: $files');
-    } else if (options.data != null) {
-      debugPrint('  body: ${options.data}');
-    }
+    final query = options.queryParameters.isNotEmpty ? ' | QUERY: ${options.queryParameters}' : '';
+    final data = options.data != null ? ' | DATA: ${options.data}' : '';
+    AppLogger.info(
+      '→ ${options.method} ${options.path}$query$data',
+      tag: LogTag.network,
+    );
     super.onRequest(options, handler);
   }
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    debugPrint('← ${response.statusCode} ${response.requestOptions.uri}');
-    debugPrint('  body: ${response.data}');
+    AppLogger.info(
+      '← ${response.requestOptions.method} ${response.requestOptions.path} ${response.statusCode}',
+      tag: LogTag.network,
+      data: response.data,
+    );
     super.onResponse(response, handler);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    debugPrint('✗ ${err.requestOptions.method} ${err.requestOptions.uri}');
-    debugPrint('  [${err.type.name}] ${err.message}');
-    if (err.response != null) {
-      debugPrint('  status: ${err.response?.statusCode}');
-      debugPrint('  body: ${err.response?.data}');
-    }
+    final status = err.response?.statusCode;
+    AppLogger.error(
+      '✕ ${err.requestOptions.method} ${err.requestOptions.path}${status != null ? ' $status' : ''}',
+      tag: LogTag.network,
+      error: err.error ?? err.message,
+      stackTrace: err.stackTrace,
+      data: err.response?.data,
+    );
     super.onError(err, handler);
   }
 }

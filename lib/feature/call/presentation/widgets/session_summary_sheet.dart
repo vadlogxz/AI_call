@@ -1,5 +1,5 @@
-import 'package:elia/core/presentation/widgets/elia_mascot.dart';
-import 'package:elia/core/theme/elia_theme_extension.dart';
+import 'package:elia/core/theme/app_colors.dart';
+import 'package:elia/shared/widgets/elia_mascot.dart';
 import 'package:flutter/material.dart';
 
 class SessionSummarySheet extends StatelessWidget {
@@ -63,8 +63,6 @@ class SessionSummarySheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.eliaColors;
-
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.75,
@@ -81,7 +79,7 @@ class SessionSummarySheet extends StatelessWidget {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: colors.borderAccent,
+                    color: AppColors.borderAccent,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -102,7 +100,7 @@ class SessionSummarySheet extends StatelessWidget {
                           ? 'Good effort!'
                           : 'Keep practising!',
                       style: TextStyle(
-                        color: colors.success,
+                        color: AppColors.success,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -110,7 +108,7 @@ class SessionSummarySheet extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '+${newWords.length * 10 + messageCount * 5} XP earned',
-                      style: TextStyle(color: colors.textMuted, fontSize: 12),
+                      style: TextStyle(color: AppColors.textMuted, fontSize: 12),
                     ),
                   ],
                 ),
@@ -154,22 +152,21 @@ class SessionSummarySheet extends StatelessWidget {
               _SkillBar(
                 label: 'Fluency',
                 percent: _fluencyPercent / 100,
-                color: colors.accentPrimary,
+                color: AppColors.primary,
               ),
               const SizedBox(height: 6),
               _SkillBar(
                 label: 'Vocabulary',
                 percent: (newWords.length * 0.2).clamp(0, 1),
-                color: colors.success,
+                color: AppColors.success,
               ),
               const SizedBox(height: 6),
               _SkillBar(
                 label: 'Grammar',
-                percent:
-                    grammarCorrections == 0
-                        ? 1.0
-                        : (1.0 - grammarCorrections * 0.15).clamp(0.2, 1.0),
-                color: colors.warning,
+                percent: grammarCorrections == 0
+                    ? 1.0
+                    : (1.0 - grammarCorrections * 0.15).clamp(0.2, 1.0),
+                color: AppColors.warning,
               ),
               const SizedBox(height: 24),
               GestureDetector(
@@ -181,14 +178,14 @@ class SessionSummarySheet extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   decoration: BoxDecoration(
-                    color: colors.accentPrimary,
+                    color: AppColors.primary,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
                     'Continue learning',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: colors.textOnAccent,
+                      color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -214,13 +211,11 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.eliaColors;
-
     return Container(
       decoration: BoxDecoration(
-        color: colors.surfaceSecondary,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: colors.borderPrimary),
+        border: Border.all(color: AppColors.surfaceBorder),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Column(
@@ -229,13 +224,13 @@ class _StatCard extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              color: accent ? colors.accentPrimary : colors.textPrimary,
+              color: accent ? AppColors.primary : AppColors.textPrimary,
               fontSize: 20,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 2),
-          Text(label, style: TextStyle(color: colors.textMuted, fontSize: 9)),
+          Text(label, style: TextStyle(color: AppColors.textMuted, fontSize: 9)),
         ],
       ),
     );
@@ -249,12 +244,10 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.eliaColors;
-
     return Text(
       text.toUpperCase(),
       style: TextStyle(
-        color: colors.textMuted,
+        color: AppColors.textMuted,
         fontSize: 10,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.6,
@@ -270,18 +263,16 @@ class _WordPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.eliaColors;
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: colors.surfaceSecondary,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colors.borderPrimary),
+        border: Border.all(color: AppColors.surfaceBorder),
       ),
       child: Text(
         word,
-        style: TextStyle(color: colors.accentSecondary, fontSize: 12),
+        style: TextStyle(color: AppColors.primaryLight, fontSize: 12),
       ),
     );
   }
@@ -300,7 +291,6 @@ class _SkillBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.eliaColors;
     final pct = percent.clamp(0.0, 1.0);
 
     return Row(
@@ -309,7 +299,7 @@ class _SkillBar extends StatelessWidget {
           width: 72,
           child: Text(
             label,
-            style: TextStyle(color: colors.textMuted, fontSize: 11),
+            style: TextStyle(color: AppColors.textMuted, fontSize: 11),
           ),
         ),
         Expanded(
@@ -317,7 +307,7 @@ class _SkillBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(3),
             child: LinearProgressIndicator(
               value: pct,
-              backgroundColor: colors.surfaceTertiary,
+              backgroundColor: AppColors.surfaceLight,
               valueColor: AlwaysStoppedAnimation<Color>(color),
               minHeight: 5,
             ),

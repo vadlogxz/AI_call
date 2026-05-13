@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:elia/core/theme/elia_theme_extension.dart';
+import 'package:elia/core/theme/app_colors.dart';
 import 'package:elia/feature/call/domain/models/conversation_result.dart';
 import 'package:elia/feature/call/domain/models/recording_status.dart';
 import 'package:elia/feature/call/presentation/widgets/call_bottom_bar.dart';
@@ -10,7 +10,7 @@ import 'package:elia/feature/call/presentation/widgets/call_header.dart';
 import 'package:elia/feature/call/presentation/widgets/conversation_list.dart';
 import 'package:elia/feature/call/presentation/widgets/grammar_banner.dart';
 import 'package:elia/feature/call/presentation/widgets/session_summary_sheet.dart';
-import 'package:elia/feature/settings/presentation/state/settings_notifier.dart';
+import 'package:elia/feature/profile/presentation/state/settings_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -65,10 +65,9 @@ class _CallScreenState extends ConsumerState<CallScreen>
     final isRecording = state.recordingStatus == RecordingStatus.recording;
     final selectedAgent = ref.watch(agentProvider).selectedAgent;
     final streak = ref.watch(settingsProvider).streak;
-    final colors = context.eliaColors;
 
     return Scaffold(
-      backgroundColor: colors.surfacePrimary,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -181,7 +180,6 @@ class _CallScreenState extends ConsumerState<CallScreen>
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        final colors = ctx.eliaColors;
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
             return Padding(
@@ -193,7 +191,7 @@ class _CallScreenState extends ConsumerState<CallScreen>
                   Text(
                     'New words from conversation',
                     style: TextStyle(
-                      color: colors.textPrimary,
+                      color: AppColors.textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
@@ -211,16 +209,13 @@ class _CallScreenState extends ConsumerState<CallScreen>
                       },
                       title: Text(
                         w.word,
-                        style: TextStyle(
-                          color: colors.textPrimary,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
                       ),
                       subtitle: Text(
                         w.translation,
-                        style: TextStyle(color: colors.textMuted, fontSize: 12),
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 12),
                       ),
-                      activeColor: colors.success,
+                      activeColor: AppColors.success,
                       checkColor: Colors.black,
                       contentPadding: EdgeInsets.zero,
                     );
@@ -230,7 +225,7 @@ class _CallScreenState extends ConsumerState<CallScreen>
                     width: double.infinity,
                     child: FilledButton(
                       style: FilledButton.styleFrom(
-                        backgroundColor: colors.success,
+                        backgroundColor: AppColors.success,
                         foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),

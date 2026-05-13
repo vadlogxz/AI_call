@@ -4,7 +4,7 @@ import 'package:elia/feature/dictionary/domain/models/vocabulary_word.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../../core/di/shared_preferences_provider.dart';
+import '../../../../core/storage/shared_preferences_provider.dart';
 
 class VocabularyRepository {
   VocabularyRepository(this._prefs);

@@ -3,7 +3,14 @@
     "allow": [
       "Bash(\"e:/dev/elia/assets/sounds/.gitkeep\")",
       "Bash(flutter pub:*)",
-      "Bash(flutter analyze:*)"
+      "Bash(flutter analyze:*)",
+      "Edit",
+      "Write",
+      "Bash",
+      "Read",
+      "PowerShell([System.IO.Directory]::GetFiles\\(\"C:\\\\Users\\\\VadLo\\\\fvm\\\\versions\\\\stable\", \"keytool.exe\", [System.IO.SearchOption]::AllDirectories\\) | Select-Object -First 3)",
+      "mcp__ide__getDiagnostics",
+      "PowerShell(git *)"
     ]
   }
 }
