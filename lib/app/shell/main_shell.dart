@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:elia/app/router/app_routes.dart';
 import 'package:elia/core/assets/app_assets.dart';
+import 'package:elia/core/logging/app_logger.dart';
 import 'package:elia/core/theme/app_colors.dart';
 import 'package:elia/core/theme/app_radius.dart';
 import 'package:elia/core/theme/app_spacing.dart';
@@ -24,7 +25,7 @@ class TabItem {
 }
 
 abstract final class AppTabs {
-  static const items = [
+  static const List<TabItem> items = [
     TabItem(
       icon: AppAssets.homeIcon,
       label: 'Home',
@@ -70,20 +71,29 @@ class AppShell extends StatelessWidget {
                 bottom:
                     _navbarHeight +
                     MediaQuery.of(context).padding.bottom +
-                    AppSpacing.bottomNavBottom,
+                    AppSpacing.lg,
               ),
             ),
             child: child,
           ),
           Positioned(
-            left: AppSpacing.bottomNavLeft,
-            right: AppSpacing.bottomNavRight,
+            right: AppSpacing.md,
+            left: AppSpacing.md,
             bottom:
                 MediaQuery.of(context).padding.bottom +
-                AppSpacing.bottomNavBottom,
+                AppSpacing.lg,
             child: _BottomNav(
               currentIndex: currentTab,
-              onTap: (value) => context.go(AppTabs.items[value].routePath),
+              onTap: (value) {
+                if(value < 0 || value >= AppTabs.items.length){
+                  AppLogger.warning('Invalid tab index: $value');
+                  return;
+                }
+                final routePath = AppTabs.items[value].routePath;
+                if (routePath != location) {
+                  context.go(routePath);
+                }
+              },
             ),
           ),
         ],
@@ -102,21 +112,21 @@ class _BottomNav extends StatefulWidget {
   State<_BottomNav> createState() => _BottomNavState();
 }
 
-class _BottomNavState extends State<_BottomNav> with SingleTickerProviderStateMixin {
+class _BottomNavState extends State<_BottomNav>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _widthAnimation;
-
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
     _widthAnimation = TweenSequence([
       TweenSequenceItem(tween: Tween(begin: 24.0, end: 48.0), weight: 40),
-      TweenSequenceItem(
-        tween: Tween(begin: 48.0, end: 24.0),
-        weight: 60,
-      ),
+      TweenSequenceItem(tween: Tween(begin: 48.0, end: 24.0), weight: 60),
     ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
@@ -129,7 +139,7 @@ class _BottomNavState extends State<_BottomNav> with SingleTickerProviderStateMi
   @override
   void didUpdateWidget(covariant _BottomNav oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if(oldWidget.currentIndex != widget.currentIndex) {
+    if (oldWidget.currentIndex != widget.currentIndex) {
       _controller.forward(from: 0);
     }
   }
@@ -158,7 +168,6 @@ class _BottomNavState extends State<_BottomNav> with SingleTickerProviderStateMi
           ),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              const indicatorWidth = 24.0;
               final tabWidth = constraints.maxWidth / AppTabs.items.length;
               final indicatorX = widget.currentIndex * tabWidth;
 
@@ -169,17 +178,21 @@ class _BottomNavState extends State<_BottomNav> with SingleTickerProviderStateMi
                       final item = AppTabs.items[i];
                       final selected = i == widget.currentIndex;
                       return Expanded(
-                        child: GestureDetector(
-                          onTap: () => widget.onTap(i),
-                          behavior: HitTestBehavior.opaque,
-                          child: Center(
-                            child: AppIcon(
-                              path: item.icon,
-                              color:
-                                  selected
-                                      ? AppColors.primary
-                                      : AppColors.textMuted,
-                              size: 26,
+                        child: Semantics(
+                          button: true,
+                          label: item.label,
+                          child: GestureDetector(
+                            onTap: () => widget.onTap(i),
+                            behavior: HitTestBehavior.opaque,
+                            child: Center(
+                              child: AppIcon(
+                                path: item.icon,
+                                color:
+                                    selected
+                                        ? AppColors.primary
+                                        : AppColors.textMuted,
+                                size: 26,
+                              ),
                             ),
                           ),
                         ),
@@ -188,27 +201,33 @@ class _BottomNavState extends State<_BottomNav> with SingleTickerProviderStateMi
                   ),
                   AnimatedBuilder(
                     animation: _widthAnimation,
-                    builder: (context, _) => AnimatedPositioned(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeOutCubic,
-                      left: indicatorX + (tabWidth / 2) - (_widthAnimation.value / 2),
-                      bottom: 8,
-                      child: Container(
-                        width: _widthAnimation.value,
-                        height: 3,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.7),
-                          borderRadius: BorderRadius.circular(2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              spreadRadius: 2,
+                    builder:
+                        (context, _) => AnimatedPositioned(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeOutCubic,
+                          left:
+                              indicatorX +
+                              (tabWidth / 2) -
+                              (_widthAnimation.value / 2),
+                          bottom: 8,
+                          child: Container(
+                            width: _widthAnimation.value,
+                            height: 3,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  blurRadius: 8,
+                                  spreadRadius: 2,
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
                   ),
                 ],
               );
