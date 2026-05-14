@@ -92,11 +92,47 @@ class AppShell extends StatelessWidget {
   }
 }
 
-class _BottomNav extends StatelessWidget {
+class _BottomNav extends StatefulWidget {
   const _BottomNav({required this.currentIndex, required this.onTap});
 
   final int currentIndex;
   final ValueChanged<int> onTap;
+
+  @override
+  State<_BottomNav> createState() => _BottomNavState();
+}
+
+class _BottomNavState extends State<_BottomNav> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _widthAnimation;
+
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _widthAnimation = TweenSequence([
+      TweenSequenceItem(tween: Tween(begin: 24.0, end: 48.0), weight: 40),
+      TweenSequenceItem(
+        tween: Tween(begin: 48.0, end: 24.0),
+        weight: 60,
+      ),
+    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant _BottomNav oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if(oldWidget.currentIndex != widget.currentIndex) {
+      _controller.forward(from: 0);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,60 +156,63 @@ class _BottomNav extends StatelessWidget {
               ),
             ],
           ),
-          child: Row(
-            children: List.generate(AppTabs.items.length, (i) {
-              final item = AppTabs.items[i];
-              final selected = i == currentIndex;
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () => onTap(i),
-                  behavior: HitTestBehavior.opaque,
-                  child: Center(
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        AppIcon(
-                          path: item.icon,
-                          color: selected
-                              ? AppColors.primary
-                              : AppColors.textMuted,
-                          size: 26,
-                        ),
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: -8,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const indicatorWidth = 24.0;
+              final tabWidth = constraints.maxWidth / AppTabs.items.length;
+              final indicatorX = widget.currentIndex * tabWidth;
+
+              return Stack(
+                children: [
+                  Row(
+                    children: List.generate(AppTabs.items.length, (i) {
+                      final item = AppTabs.items[i];
+                      final selected = i == widget.currentIndex;
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () => widget.onTap(i),
+                          behavior: HitTestBehavior.opaque,
                           child: Center(
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 220),
-                              curve: Curves.easeOutCubic,
-                              width: selected ? 25.0 : 0.0,
-                              height: 3,
-                              decoration: BoxDecoration(
-                                color: selected
-                                    ? AppColors.primary.withValues(alpha: 0.7)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(2),
-                                boxShadow: selected
-                                    ? [
-                                        BoxShadow(
-                                          color: AppColors.primary
-                                              .withValues(alpha: 0.3),
-                                          blurRadius: 8,
-                                          spreadRadius: 2,
-                                        ),
-                                      ]
-                                    : null,
-                              ),
+                            child: AppIcon(
+                              path: item.icon,
+                              color:
+                                  selected
+                                      ? AppColors.primary
+                                      : AppColors.textMuted,
+                              size: 26,
                             ),
                           ),
                         ),
-                      ],
+                      );
+                    }),
+                  ),
+                  AnimatedBuilder(
+                    animation: _widthAnimation,
+                    builder: (context, _) => AnimatedPositioned(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutCubic,
+                      left: indicatorX + (tabWidth / 2) - (_widthAnimation.value / 2),
+                      bottom: 8,
+                      child: Container(
+                        width: _widthAnimation.value,
+                        height: 3,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               );
-            }),
+            },
           ),
         ),
       ),
