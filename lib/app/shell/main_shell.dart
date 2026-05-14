@@ -1,19 +1,23 @@
+import 'dart:ui';
+
 import 'package:elia/app/router/app_routes.dart';
 import 'package:elia/core/assets/app_assets.dart';
 import 'package:elia/core/theme/app_colors.dart';
+import 'package:elia/core/theme/app_radius.dart';
+import 'package:elia/core/theme/app_spacing.dart';
 import 'package:elia/shared/widgets/app_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+const _navbarHeight = 60.0;
+
 class TabItem {
   final String icon;
-  final String activeIcon;
   final String label;
   final String routePath;
 
   const TabItem({
     required this.icon,
-    required this.activeIcon,
     required this.label,
     required this.routePath,
   });
@@ -22,20 +26,17 @@ class TabItem {
 abstract final class AppTabs {
   static const items = [
     TabItem(
-      icon: AppAssets.homeBrokenIcon,
-      activeIcon: AppAssets.homeOutlineIcon,
+      icon: AppAssets.homeIcon,
       label: 'Home',
       routePath: AppRoutes.homePath,
     ),
     TabItem(
-      icon: AppAssets.bookBrokenIcon,
-      activeIcon: AppAssets.bookOutlineIcon,
+      icon: AppAssets.bookOutlineIcon,
       label: 'Dictionary',
       routePath: AppRoutes.dictionaryPath,
     ),
     TabItem(
-      icon: AppAssets.userBrokenIcon,
-      activeIcon: AppAssets.userOutlineIcon,
+      icon: AppAssets.userOutlineIcon,
       label: 'Profile',
       routePath: AppRoutes.profilePath,
     ),
@@ -61,10 +62,31 @@ class AppShell extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: child,
-      bottomNavigationBar: _BottomNav(
-        currentIndex: currentTab,
-        onTap: (value) => context.go(AppTabs.items[value].routePath),
+      body: Stack(
+        children: [
+          MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              padding: MediaQuery.of(context).padding.copyWith(
+                bottom:
+                    _navbarHeight +
+                    MediaQuery.of(context).padding.bottom +
+                    AppSpacing.bottomNavBottom,
+              ),
+            ),
+            child: child,
+          ),
+          Positioned(
+            left: AppSpacing.bottomNavLeft,
+            right: AppSpacing.bottomNavRight,
+            bottom:
+                MediaQuery.of(context).padding.bottom +
+                AppSpacing.bottomNavBottom,
+            child: _BottomNav(
+              currentIndex: currentTab,
+              onTap: (value) => context.go(AppTabs.items[value].routePath),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -78,15 +100,26 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        border: Border(top: BorderSide(color: AppColors.surfaceBorder, width: 0.5)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
+    return ClipRRect(
+      borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          height: _navbarHeight,
+          decoration: BoxDecoration(
+            color: AppColors.surface.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
+            border: Border.all(
+              color: AppColors.surfaceBorder.withValues(alpha: 0.5),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
           child: Row(
             children: List.generate(AppTabs.items.length, (i) {
               final item = AppTabs.items[i];
@@ -96,39 +129,46 @@ class _BottomNav extends StatelessWidget {
                   onTap: () => onTap(i),
                   behavior: HitTestBehavior.opaque,
                   child: Center(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeOutCubic,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 7,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            selected ? AppColors.surface : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AppIcon(
-                            path: selected ? item.activeIcon : item.icon,
-                            color: selected ? AppColors.textPrimary : AppColors.textMuted,
-                            size: 20,
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            item.label,
-                            style: TextStyle(
-                              color: selected ? AppColors.textPrimary : AppColors.textMuted,
-                              fontSize: 10,
-                              fontWeight:
-                                  selected ? FontWeight.w600 : FontWeight.w400,
-                              letterSpacing: selected ? 0.2 : 0,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        AppIcon(
+                          path: item.icon,
+                          color: selected
+                              ? AppColors.primary
+                              : AppColors.textMuted,
+                          size: 26,
+                        ),
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: -8,
+                          child: Center(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 220),
+                              curve: Curves.easeOutCubic,
+                              width: selected ? 25.0 : 0.0,
+                              height: 3,
+                              decoration: BoxDecoration(
+                                color: selected
+                                    ? AppColors.primary.withValues(alpha: 0.7)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(2),
+                                boxShadow: selected
+                                    ? [
+                                        BoxShadow(
+                                          color: AppColors.primary
+                                              .withValues(alpha: 0.3),
+                                          blurRadius: 8,
+                                          spreadRadius: 2,
+                                        ),
+                                      ]
+                                    : null,
+                              ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

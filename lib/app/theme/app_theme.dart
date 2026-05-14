@@ -31,13 +31,13 @@ class AppTheme {
       ring: AppColors.primary,
       selection: AppColors.primaryDark,
     ),
-    radius: BorderRadius.circular(AppRadius.medium),
+    radius: BorderRadius.circular(AppRadius.md),
   );
 
   static ShadThemeData get light => ShadThemeData(
     brightness: Brightness.light,
     colorScheme: const ShadZincColorScheme.light(),
-    radius: BorderRadius.circular(AppRadius.medium),
+    radius: BorderRadius.circular(AppRadius.md),
   );
 
   // Підкладка під Material-віджети (передається в materialThemeBuilder у ShadApp)
@@ -71,15 +71,15 @@ class AppTheme {
       fillColor: AppColors.surface,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.large),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         borderSide: const BorderSide(color: AppColors.surfaceBorder),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.large),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         borderSide: const BorderSide(color: AppColors.surfaceBorder),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.large),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
       hintStyle: const TextStyle(color: AppColors.textMuted),
