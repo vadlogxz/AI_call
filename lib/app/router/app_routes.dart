@@ -7,12 +7,12 @@ final class AppRoute {
 
 abstract final class AppRoutes {
   static const homePath = '/home';
-  static const dictionaryPath = '/dictionary';
+  static const vocabularyPath = '/vocabulary';
   static const profilePath = '/profile';
   static const loginPath = '/login';
 
   static const home = AppRoute(path: homePath, name: 'home');
-  static const dictionary = AppRoute(path: dictionaryPath, name: 'dictionary');
+  static const vocabulary = AppRoute(path: vocabularyPath, name: 'vocabulary');
   static const profile = AppRoute(path: profilePath, name: 'profile');
   static const login = AppRoute(path: loginPath, name: 'login');
 }

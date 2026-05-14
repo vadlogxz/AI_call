@@ -4,8 +4,6 @@ import 'package:elia/feature/call/di/recorder_providers.dart';
 import 'package:elia/feature/call/domain/models/word_lookup_result.dart';
 import 'package:elia/feature/call/presentation/state/recording_state.dart';
 import 'package:elia/feature/call/presentation/widgets/word_lookup_sheet.dart';
-import 'package:elia/feature/dictionary/domain/models/vocabulary_word.dart';
-import 'package:elia/feature/dictionary/presentation/state/vocabulary_notifier.dart';
 import 'package:elia/feature/profile/presentation/state/settings_notifier.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -264,26 +262,11 @@ class _LookupableMessageText extends ConsumerWidget {
             }
 
             final result = snapshot.data!;
-            final savedWords = ref.read(vocabularyProvider);
-            final isSaved = _containsWord(savedWords, result.word);
 
             return WordLookupSheet(
               result: result,
-              isSaved: isSaved,
-              onSave: () {
-                ref
-                    .read(vocabularyProvider.notifier)
-                    .addWord(
-                      VocabularyWord(
-                        id: DateTime.now().microsecondsSinceEpoch.toString(),
-                        word: result.word,
-                        translation: result.translation,
-                        partOfSpeech: result.partOfSpeech,
-                        example: result.example,
-                        addedAt: DateTime.now(),
-                      ),
-                    );
-              },
+              isSaved: false,
+              onSave: () {},
             );
           },
         );
@@ -304,8 +287,4 @@ class _LookupableMessageText extends ConsumerWidget {
     return token.replaceAll(RegExp(r"^[^A-Za-zÀ-ÿ']+|[^A-Za-zÀ-ÿ']+$"), '');
   }
 
-  static bool _containsWord(List<VocabularyWord> words, String lookupWord) {
-    final normalized = lookupWord.toLowerCase();
-    return words.any((word) => word.word.toLowerCase() == normalized);
-  }
 }

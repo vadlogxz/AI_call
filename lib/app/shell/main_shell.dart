@@ -33,8 +33,8 @@ abstract final class AppTabs {
     ),
     TabItem(
       icon: AppAssets.bookOutlineIcon,
-      label: 'Dictionary',
-      routePath: AppRoutes.dictionaryPath,
+      label: 'Vocabulary',
+      routePath: AppRoutes.vocabularyPath,
     ),
     TabItem(
       icon: AppAssets.userOutlineIcon,
@@ -45,7 +45,7 @@ abstract final class AppTabs {
 
   static int indexFromLocation(String location) {
     if (location.startsWith(AppRoutes.homePath)) return 0;
-    if (location.startsWith(AppRoutes.dictionaryPath)) return 1;
+    if (location.startsWith(AppRoutes.vocabularyPath)) return 1;
     if (location.startsWith(AppRoutes.profilePath)) return 2;
     return 0;
   }

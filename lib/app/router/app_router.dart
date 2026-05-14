@@ -1,7 +1,7 @@
 import 'package:elia/app/router/app_routes.dart';
 import 'package:elia/app/shell/main_shell.dart';
 import 'package:elia/feature/auth/presentation/login_screen.dart';
-import 'package:elia/feature/dictionary/presentation/pages/dictionary_screen.dart';
+import 'package:elia/feature/vocabulary/presentation/pages/vocabulary_screen.dart';
 import 'package:elia/feature/home/presentation/screens/home_screen.dart';
 import 'package:elia/feature/profile/presentation/pages/profile_screen.dart';
 import 'package:go_router/go_router.dart';
@@ -21,9 +21,9 @@ final appRoutes = <RouteBase>[
         builder: (context, state) => const HomeScreen(),
       ),
       GoRoute(
-        path: AppRoutes.dictionary.path,
-        name: AppRoutes.dictionary.name,
-        builder: (context, state) => const DictionaryScreen(),
+        path: AppRoutes.vocabulary.path,
+        name: AppRoutes.vocabulary.name,
+        builder: (context, state) => const VocabularyScreen(),
       ),
       GoRoute(
         path: AppRoutes.profile.path,
