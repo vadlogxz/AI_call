@@ -2,6 +2,7 @@ import 'package:elia/core/theme/app_colors.dart';
 import 'package:elia/core/theme/app_radius.dart';
 import 'package:elia/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 class AppTheme {
@@ -31,13 +32,13 @@ class AppTheme {
       ring: AppColors.primary,
       selection: AppColors.primaryDark,
     ),
-    radius: BorderRadius.circular(AppRadius.md),
+    radius: BorderRadius.circular(AppRadius.sm),
   );
 
   static ShadThemeData get light => ShadThemeData(
     brightness: Brightness.light,
     colorScheme: const ShadZincColorScheme.light(),
-    radius: BorderRadius.circular(AppRadius.md),
+    radius: BorderRadius.circular(AppRadius.sm),
   );
 
   // Підкладка під Material-віджети (передається в materialThemeBuilder у ShadApp)
@@ -45,14 +46,15 @@ class AppTheme {
     brightness: Brightness.dark,
     useMaterial3: true,
     scaffoldBackgroundColor: AppColors.background,
-    fontFamily: 'Inter',
+    fontFamily: GoogleFonts.inter().fontFamily,
     colorScheme: const ColorScheme.dark(
       primary: AppColors.primary,
       secondary: AppColors.secondary,
       surface: AppColors.surface,
       error: AppColors.error,
+      onSurface: AppColors.textPrimary,
     ),
-    textTheme: const TextTheme(
+    textTheme: TextTheme(
       headlineLarge: AppTextStyles.heading1,
       headlineMedium: AppTextStyles.heading2,
       headlineSmall: AppTextStyles.heading3,
