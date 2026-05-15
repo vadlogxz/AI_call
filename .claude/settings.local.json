@@ -10,7 +10,8 @@
       "Read",
       "PowerShell([System.IO.Directory]::GetFiles\\(\"C:\\\\Users\\\\VadLo\\\\fvm\\\\versions\\\\stable\", \"keytool.exe\", [System.IO.SearchOption]::AllDirectories\\) | Select-Object -First 3)",
       "mcp__ide__getDiagnostics",
-      "PowerShell(git *)"
+      "PowerShell(git *)",
+      "PowerShell(New-Item *)"
     ]
   }
 }

@@ -16,7 +16,10 @@ final routerProvider = Provider<GoRouter>(
         navigatorKey: _rootNavigatorKey,
         routes: appRoutes,
         initialLocation: '/login',
-        redirect: (context, state) {
+        redirect: (context, state) async {
+          // final token = await FirebaseAuth.instance.currentUser?.getIdToken();
+          // debugPrint('TOKEN: $token');
+
           if (authState.isLoading) return null;
           final isLoggedIn = authState.asData?.value is Authenticated;
           final isOnLoginPage = state.matchedLocation == '/login';

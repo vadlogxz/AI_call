@@ -21,8 +21,9 @@ class ApiClient {
     String path, {
     Map<String, dynamic>? data,
     Map<String, dynamic>? queryParameters,
+        Options? options,
   }) {
-    return _dio.post(path, data: data, queryParameters: queryParameters);
+    return _dio.post(path, data: data, queryParameters: queryParameters, options: options);
   }
 
   Future<Response<dynamic>> postMultipart(

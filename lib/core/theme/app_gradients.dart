@@ -8,7 +8,8 @@ class AppGradients {
   static const primary = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [AppColors.primary, Color(0xFFB14DFF)],
+    colors: [Color(0xFF4A2FD9), Color(0xFF8B1FCC)],
+    stops: [0.0, 1.0],
   );
 
   // Blue → Purple (secondary actions, accents)

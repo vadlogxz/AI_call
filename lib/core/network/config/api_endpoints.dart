@@ -6,6 +6,7 @@ class ApiEndpoints {
   static const String ttsEndpoint = '/tts';
   static const String conversationEndpoint = '/conversation';
   static const String wordLookupEndpoint = '/vocabulary/lookup';
+  static const String wordGenerateEndpoint = '/generate-word';
 
   static String url(String path) => '${ApiConfig.baseUrl}$path';
 }

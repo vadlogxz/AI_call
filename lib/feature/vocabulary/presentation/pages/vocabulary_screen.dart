@@ -1,5 +1,6 @@
 import 'package:elia/core/assets/app_assets.dart';
 import 'package:elia/core/theme/app_colors.dart';
+import 'package:elia/core/theme/app_gradients.dart';
 import 'package:elia/core/theme/app_radius.dart';
 import 'package:elia/core/theme/app_spacing.dart';
 import 'package:elia/core/theme/app_text_styles.dart';
@@ -16,6 +17,7 @@ class VocabularyScreen extends StatefulWidget {
 
 class _VocabularyScreenState extends State<VocabularyScreen> {
   late TextEditingController searchController;
+  bool _fabPressed = false;
 
   @override
   void initState() {
@@ -32,6 +34,37 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: GestureDetector(
+          onTap: () {},
+          onTapDown: (_) => setState(() => _fabPressed = true),
+          onTapUp: (_) => setState(() => _fabPressed = false),
+          onTapCancel: () => setState(() => _fabPressed = false),
+          child: AnimatedScale(
+            scale: _fabPressed ? 0.92 : 1.0,
+            duration: const Duration(milliseconds: 100),
+            curve: Curves.easeOut,
+            child: Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: AppGradients.primary,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.glowPrimary,
+                  blurRadius: 24,
+                  spreadRadius: -2,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.add, color: Colors.white, size: 24),
+          ),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -41,14 +74,9 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Vocabulary', style: AppTextStyles.heading2),
-                  SizedBox(height: AppSpacing.xs),
-                  Text('Your personal word list', style: AppTextStyles.body),
-                ],
-              ),
+              Text('Vocabulary', style: AppTextStyles.heading2),
+              SizedBox(height: AppSpacing.xs),
+              Text('Your personal word list', style: AppTextStyles.body),
               SizedBox(height: AppSpacing.lg),
               Row(
                 children: [
@@ -101,7 +129,7 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
                   Expanded(
                     child: StatisticCard(
                       title: 'Learned',
-                      value: 10540,
+                      value: 0,
                       accentText: '0% of all words',
                       accentTextColor: AppColors.success,
                       iconPath: AppAssets.notebookIcon,
