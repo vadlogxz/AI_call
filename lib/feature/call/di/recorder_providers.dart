@@ -1,5 +1,5 @@
 import 'package:elia/core/config/audio_config.dart';
-import 'package:elia/core/network/client/api_client.dart';
+import 'package:elia/core/di/core_providers.dart';
 import 'package:elia/feature/call/data/engines/record_audio_recorder_engine.dart';
 import 'package:elia/feature/call/data/engines/vad_speech_detector_engine.dart';
 import 'package:elia/feature/call/data/services/audio_playback_service.dart';
@@ -42,10 +42,6 @@ final audioSessionCoordinatorProvider = Provider<AudioSessionCoordinator>((
   );
   ref.onDispose(coordinator.dispose);
   return coordinator;
-});
-
-final apiClientProvider = Provider<ApiClient>((ref) {
-  return ApiClient();
 });
 
 final speechApiServiceProvider = Provider<SpeechApiService>((ref) {

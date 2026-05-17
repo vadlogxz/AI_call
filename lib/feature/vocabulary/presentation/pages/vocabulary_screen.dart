@@ -19,6 +19,7 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
   late TextEditingController searchController;
   bool _fabPressed = false;
 
+
   @override
   void initState() {
     super.initState();
